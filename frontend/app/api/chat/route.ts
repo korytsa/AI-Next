@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateMessages, createChatCompletion } from '@/app/lib/chat-utils'
 import { getErrorStatus, getRetryAfter, getErrorMessage } from '@/app/lib/api-utils'
 import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
+import { responseCache } from '@/app/lib/cache'
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none' } = await req.json()
+    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', useCache = false } = await req.json()
 
     if (!validateMessages(messages)) {
       return NextResponse.json(
@@ -15,12 +16,32 @@ export async function POST(req: NextRequest) {
     }
 
     const messagesToSend = await enhanceMessagesWithFunctions(messages)
+
+    if (useCache) {
+      const cachedResponse = responseCache.get(messagesToSend, userName, responseMode, chainOfThought)
+      if (cachedResponse) {
+        return NextResponse.json({
+          ...cachedResponse,
+          cached: true,
+        })
+      }
+    }
+
     const completion = await createChatCompletion(messagesToSend, false, userName, responseMode, chainOfThought)
 
     if ('choices' in completion) {
-      return NextResponse.json({
+      const response = {
         message: completion.choices[0]?.message?.content || '',
-        usage: completion.usage, 
+        usage: completion.usage,
+      }
+
+      if (useCache) {
+        responseCache.set(messagesToSend, response, userName, responseMode, chainOfThought)
+      }
+
+      return NextResponse.json({
+        ...response,
+        cached: false,
       })
     }
     
