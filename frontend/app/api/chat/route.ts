@@ -3,9 +3,15 @@ import { validateMessages, createChatCompletion } from '@/app/lib/chat-utils'
 import { getErrorStatus, getRetryAfter, getErrorMessage } from '@/app/lib/api-utils'
 import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
 import { responseCache } from '@/app/lib/cache'
+import { checkThrottle } from '@/app/lib/throttle-utils'
 
 export async function POST(req: NextRequest) {
   try {
+    const throttleCheck = checkThrottle(req)
+    if (!throttleCheck.allowed) {
+      return throttleCheck.response as NextResponse
+    }
+
     const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', useCache = false } = await req.json()
 
     if (!validateMessages(messages)) {
