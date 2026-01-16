@@ -29,6 +29,10 @@ export default function ChatPage() {
     totalTokens,
     chainOfThought,
     handleSetChainOfThought,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
+    messagesStartRef,
   } = useChat()
 
   return (
@@ -49,9 +53,13 @@ export default function ChatPage() {
       />
       <MessagesList 
         messages={messages} 
-        messagesEndRef={messagesEndRef} 
+        messagesEndRef={messagesEndRef}
+        messagesStartRef={messagesStartRef}
         loading={loading}
         onRetry={retryLastMessage}
+        onLoadMore={loadMoreMessages}
+        hasMoreMessages={hasMoreMessages}
+        isLoadingMore={isLoadingMore}
       />
       <ChatInput ref={inputRef} input={input} setInput={setInput} onSubmit={handleSubmit} loading={loading} />
       <NameModal
