@@ -30,8 +30,6 @@ export function useChat() {
 
   const {
     userName,
-    showNameModal,
-    setShowNameModal,
     handleSetUserName,
     responseMode,
     handleSetResponseMode,
@@ -151,9 +149,7 @@ export function useChat() {
     clearHistory,
     retryLastMessage,
     userName,
-    showNameModal,
     handleSetUserName,
-    setShowNameModal,
     responseMode,
     handleSetResponseMode,
     exportDialog,

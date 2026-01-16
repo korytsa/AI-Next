@@ -4,7 +4,6 @@ import { useChat } from './hooks/useChat'
 import { ChatHeader } from './components/ChatHeader'
 import { MessagesList } from './components/MessagesList'
 import { ChatInput } from './components/ChatInput'
-import { NameModal } from './components/NameModal'
 
 export default function ChatPage() {
   const {
@@ -20,9 +19,7 @@ export default function ChatPage() {
     clearHistory,
     retryLastMessage,
     userName,
-    showNameModal,
     handleSetUserName,
-    setShowNameModal,
     responseMode,
     handleSetResponseMode,
     exportDialog,
@@ -44,7 +41,7 @@ export default function ChatPage() {
         loading={loading}
         onClearHistory={clearHistory}
         userName={userName}
-        onEditName={() => setShowNameModal(true)}
+        onEditName={handleSetUserName}
         responseMode={responseMode}
         onSetResponseMode={handleSetResponseMode}
         onExportDialog={exportDialog}
@@ -64,11 +61,6 @@ export default function ChatPage() {
         isLoadingMore={isLoadingMore}
       />
       <ChatInput ref={inputRef} input={input} setInput={setInput} onSubmit={handleSubmit} loading={loading} />
-      <NameModal
-        isOpen={showNameModal}
-        onClose={() => setShowNameModal(false)}
-        onSave={handleSetUserName}
-      />
     </div>
   )
 }

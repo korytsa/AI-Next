@@ -86,8 +86,8 @@ const saveChainOfThoughtToStorage = (mode: ChainOfThoughtMode) => {
 }
 
 export function useUserSettings() {
-  const [userName, setUserName] = useState<string | null>(null)
-  const [showNameModal, setShowNameModal] = useState(false)
+  const DEFAULT_USER_NAME = 'user'
+  const [userName, setUserName] = useState<string>(DEFAULT_USER_NAME)
   const [responseMode, setResponseMode] = useState<ResponseMode>('detailed')
   const [chainOfThought, setChainOfThought] = useState<ChainOfThoughtMode>('none')
   const isHydrated = useRef(false)
@@ -98,7 +98,8 @@ export function useUserSettings() {
       if (loadedUserName) {
         setUserName(loadedUserName)
       } else {
-        setShowNameModal(true)
+        setUserName(DEFAULT_USER_NAME)
+        saveUserNameToStorage(DEFAULT_USER_NAME)
       }
       
       const loadedResponseMode = loadResponseModeFromStorage()
@@ -112,11 +113,9 @@ export function useUserSettings() {
   }, [])
 
   const handleSetUserName = (name: string) => {
-    if (name.trim()) {
-      setUserName(name.trim())
-      saveUserNameToStorage(name.trim())
-      setShowNameModal(false)
-    }
+    const trimmedName = name.trim() || DEFAULT_USER_NAME
+    setUserName(trimmedName)
+    saveUserNameToStorage(trimmedName)
   }
 
   const handleSetResponseMode = (mode: ResponseMode) => {
@@ -131,8 +130,6 @@ export function useUserSettings() {
 
   return {
     userName,
-    showNameModal,
-    setShowNameModal,
     handleSetUserName,
     responseMode,
     handleSetResponseMode,

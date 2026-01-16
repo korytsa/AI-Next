@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { ArrowLeft, Trash2, User, Edit2, Download } from 'lucide-react'
+import { ArrowLeft, Trash2, User, Edit2, Download, Check, X } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
+import { useState, useEffect } from 'react'
 
 interface ChatHeaderProps {
   useStreaming: boolean
@@ -8,7 +9,7 @@ interface ChatHeaderProps {
   loading: boolean
   onClearHistory: () => void
   userName?: string | null
-  onEditName?: () => void
+  onEditName?: (name: string) => void
   responseMode: ResponseMode
   onSetResponseMode: (mode: ResponseMode) => void
   onExportDialog?: () => void
@@ -19,6 +20,39 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, isExporting = false }: ChatHeaderProps) {
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editedName, setEditedName] = useState(userName || 'user')
+
+  useEffect(() => {
+    if (!isEditingName) {
+      setEditedName(userName || 'user')
+    }
+  }, [userName, isEditingName])
+
+  const handleStartEdit = () => {
+    setEditedName(userName || 'user')
+    setIsEditingName(true)
+  }
+
+  const handleSaveName = () => {
+    if (onEditName && editedName.trim()) {
+      onEditName(editedName.trim())
+    }
+    setIsEditingName(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditedName(userName || 'user')
+    setIsEditingName(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSaveName()
+    } else if (e.key === 'Escape') {
+      handleCancelEdit()
+    }
+  }
   return (
     <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b p-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -26,21 +60,49 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <h1 className="text-2xl font-bold">AI Chat</h1>
-        {userName && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-            <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{userName}</span>
-            {onEditName && (
+        <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+          <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          {isEditingName ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleSaveName}
+                className="text-sm font-medium text-blue-600 dark:text-blue-400 bg-transparent border-b border-blue-400 focus:outline-none focus:border-blue-600 px-1 min-w-[60px]"
+                autoFocus
+              />
               <button
-                onClick={onEditName}
-                className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg"
-                title="Change name"
+                onClick={handleSaveName}
+                className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
+                title="Save"
               >
-                <Edit2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                <Check className="w-3 h-3 text-blue-600 dark:text-blue-400" />
               </button>
-            )}
-          </div>
-        )}
+              <button
+                onClick={handleCancelEdit}
+                className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
+                title="Cancel"
+              >
+                <X className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{userName || 'user'}</span>
+              {onEditName && (
+                <button
+                  onClick={handleStartEdit}
+                  className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg"
+                  title="Change name"
+                >
+                  <Edit2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
