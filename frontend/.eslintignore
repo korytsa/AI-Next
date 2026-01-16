@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Static files (including workers)
+public/
+
+# Config files
+*.config.js
+*.config.ts
+
+# Other
+.env*

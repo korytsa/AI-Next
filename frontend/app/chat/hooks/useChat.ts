@@ -4,12 +4,14 @@ import { parseError, ChatError } from '@/app/lib/error-handler'
 import { useMessages } from './useMessages'
 import { useUserSettings } from './useUserSettings'
 import { useChatApi } from './useChatApi'
+import { useExportWorker } from './useExportWorker'
 
 export type { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
 
 export function useChat() {
   const [input, setInput] = useState('')
   const [useStreaming, setUseStreaming] = useState(true)
+  const [isExporting, setIsExporting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -53,6 +55,8 @@ export function useChat() {
     chainOfThought,
     scrollToBottom,
   })
+
+  const { exportMessages: exportMessagesWorker } = useExportWorker()
 
   useEffect(() => {
     if (!loading && inputRef.current && displayedMessages.length > 1) {
@@ -110,27 +114,27 @@ export function useChat() {
     clearMessagesHistory()
   }
 
-  const exportDialog = () => {
+  const exportDialog = async () => {
     if (allMessages.length === 0) return
 
-    const dialogText = allMessages
-      .filter((msg) => msg.role !== 'system')
-      .map((msg) => {
-        const role = msg.role === 'user' ? 'You' : 'AI'
-        const content = msg.error ? `[Error: ${msg.error.message}]` : msg.content
-        return `${role}: ${content}`
-      })
-      .join('\n\n')
+    try {
+      setIsExporting(true)
+      const dialogText = await exportMessagesWorker(allMessages)
 
-    const blob = new Blob([dialogText], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `chat-export-${new Date().toISOString().split('T')[0]}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+      const blob = new Blob([dialogText], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `chat-export-${new Date().toISOString().split('T')[0]}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to export messages:', error)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return {
@@ -159,5 +163,6 @@ export function useChat() {
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
+    isExporting,
   }
 }

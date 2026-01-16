@@ -33,6 +33,7 @@ export default function ChatPage() {
     hasMoreMessages,
     isLoadingMore,
     messagesStartRef,
+    isExporting,
   } = useChat()
 
   return (
@@ -50,6 +51,7 @@ export default function ChatPage() {
         totalTokens={totalTokens}
         chainOfThought={chainOfThought}
         onSetChainOfThought={handleSetChainOfThought}
+        isExporting={isExporting}
       />
       <MessagesList 
         messages={messages} 

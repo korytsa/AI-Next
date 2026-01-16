@@ -15,9 +15,10 @@ interface ChatHeaderProps {
   totalTokens?: number
   chainOfThought: ChainOfThoughtMode
   onSetChainOfThought: (mode: ChainOfThoughtMode) => void
+  isExporting?: boolean
 }
 
-export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought }: ChatHeaderProps) {
+export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, isExporting = false }: ChatHeaderProps) {
   return (
     <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b p-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -111,12 +112,12 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
           <button
             type="button"
             onClick={onExportDialog}
-            disabled={loading}
+            disabled={loading || isExporting}
             className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            title="Save as text"
+            title={isExporting ? "Exporting..." : "Save as text"}
           >
-            <Download className="w-4 h-4" />
-            Save as text
+            <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
+            {isExporting ? 'Exporting...' : 'Save as text'}
           </button>
         )}
         <button
