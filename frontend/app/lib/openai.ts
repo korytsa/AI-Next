@@ -12,5 +12,5 @@ export const openai = new OpenAI({
 })
 
 export const DEFAULT_MODEL = 'llama-3.1-8b-instant'
-export const DEFAULT_TEMPERATURE = 0.7              
+export const DEFAULT_TEMPERATURE = 0.5              
 export const DEFAULT_MAX_TOKENS = 2000

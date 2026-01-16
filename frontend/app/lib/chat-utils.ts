@@ -1,10 +1,11 @@
-import { openai, DEFAULT_MODEL, DEFAULT_TEMPERATURE } from './openai'
+import { openai, DEFAULT_MODEL, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from './openai'
 import { 
   SHORT_RESPONSE_EXAMPLES, 
   DETAILED_RESPONSE_EXAMPLES,
   getFewShotPrompt 
 } from './few-shot-examples'
 import { getChainOfThoughtPrompt, ChainOfThoughtMode } from './chain-of-thought'
+import { trimMessages, TrimmingOptions } from './message-trimming'
 
 export type ResponseMode = 'short' | 'detailed'
 
@@ -56,9 +57,24 @@ export function prepareMessages(
   messages: any[], 
   userName?: string | null, 
   responseMode: ResponseMode = 'detailed',
-  chainOfThought: ChainOfThoughtMode = 'none'
+  chainOfThought: ChainOfThoughtMode = 'none',
+  trimmingOptions?: TrimmingOptions
 ) {
-  return [getSystemMessage(userName, responseMode, true, chainOfThought), ...messages]
+  const systemMessage = getSystemMessage(userName, responseMode, true, chainOfThought)
+  const allMessages = [systemMessage, ...messages]
+
+  if (trimmingOptions) {
+    const trimmed = trimMessages(allMessages, trimmingOptions)
+    return trimmed
+  }
+
+  const defaultTrimming: TrimmingOptions = {
+    strategy: 'last_n_tokens',
+    maxTokens: DEFAULT_MAX_TOKENS * 2,
+    keepSystemMessage: true,
+  }
+
+  return trimMessages(allMessages, defaultTrimming)
 }
 
 export function createChatCompletion(
@@ -66,12 +82,16 @@ export function createChatCompletion(
   stream: boolean = false, 
   userName?: string | null, 
   responseMode: ResponseMode = 'detailed',
-  chainOfThought: ChainOfThoughtMode = 'none'
+  chainOfThought: ChainOfThoughtMode = 'none',
+  trimmingOptions?: TrimmingOptions
 ) {
+  const preparedMessages = prepareMessages(messages, userName, responseMode, chainOfThought, trimmingOptions)
+  
   return openai.chat.completions.create({
     model: DEFAULT_MODEL,
-    messages: prepareMessages(messages, userName, responseMode, chainOfThought),
+    messages: preparedMessages,
     temperature: DEFAULT_TEMPERATURE,
     stream,
+    max_tokens: DEFAULT_MAX_TOKENS,
   })
 }
