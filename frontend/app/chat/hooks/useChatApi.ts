@@ -52,6 +52,11 @@ export function useChatApi({
         const errorData = await response.json().catch(() => ({}))
         const chatError = parseError(errorData, response)
         
+        // Ошибки валидации и модерации не ретраятся
+        if (chatError.type === 'validation_error' || chatError.type === 'moderation_error') {
+          throw chatError
+        }
+        
         if (chatError.retryable && retryCount < MAX_RETRIES) {
           const delay = Math.min(1000 * Math.pow(2, retryCount), 10000)
           await new Promise(resolve => setTimeout(resolve, delay))
@@ -160,6 +165,11 @@ export function useChatApi({
 
       if (!response.ok) {
         const chatError = parseError(data, response)
+        
+        // Ошибки валидации и модерации не ретраятся
+        if (chatError.type === 'validation_error' || chatError.type === 'moderation_error') {
+          throw chatError
+        }
         
         if (chatError.retryable && retryCount < MAX_RETRIES) {
           const delay = Math.min(1000 * Math.pow(2, retryCount), 10000)

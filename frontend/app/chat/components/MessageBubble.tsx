@@ -35,6 +35,16 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
                     Retry after {message.error.retryAfter} seconds
                   </p>
                 )}
+                {message.error && (message.error.type === 'validation_error' || message.error.type === 'moderation_error') && message.error.details && message.error.details.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs text-red-500 dark:text-red-500 font-medium">Details:</p>
+                    <ul className="text-xs text-red-600 dark:text-red-400 space-y-1 list-disc list-inside">
+                      {message.error.details.map((detail: string, index: number) => (
+                        <li key={index}>{detail}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
             {isRetryable && onRetry && (

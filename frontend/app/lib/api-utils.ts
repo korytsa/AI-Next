@@ -21,6 +21,9 @@ export function getErrorMessage(error: any, defaultMessage: string = 'Failed to 
   } else if (status === 401) {
     return 'Invalid API key. Please check your configuration.'
   } else if (error?.message) {
+    if (error.message.includes('GROQ_API_KEY') || error.message.includes('API key')) {
+      return 'API key is missing or invalid. Please check your environment variables.'
+    }
     return error.message
   }
   

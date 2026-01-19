@@ -3,7 +3,7 @@ import OpenAI from 'openai'
 const groqApiKey = process.env.GROQ_API_KEY
 
 if (!groqApiKey) {
-  throw new Error('GROQ_API_KEY is not set in environment variables')
+  throw new Error('GROQ_API_KEY is not set in environment variables. Please set it in frontend/.env.local')
 }
 
 export const openai = new OpenAI({

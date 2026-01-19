@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server'
-import { validateMessages, createChatCompletion } from '@/app/lib/chat-utils'
+import { validateMessages as validateMessagesFormat, createChatCompletion } from '@/app/lib/chat-utils'
 import { getErrorStatus, getRetryAfter, getErrorMessage } from '@/app/lib/api-utils'
 import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
 import { checkThrottle } from '@/app/lib/throttle-utils'
+import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
+import { moderateMessages } from '@/app/lib/content-moderation'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,12 +15,52 @@ export async function POST(req: NextRequest) {
 
     const { messages, userName, responseMode = 'detailed', chainOfThought = 'none' } = await req.json()
 
-    if (!validateMessages(messages)) {
+    if (!validateMessagesFormat(messages)) {
       return new Response(
         JSON.stringify({ error: 'Messages array is required' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       )
     }
+
+    const promptValidation = validatePromptMessages(messages, {
+      maxLength: 10000,
+      checkInjection: true,
+      checkSpecialChars: true,
+      checkLength: true,
+    })
+
+    if (!promptValidation.isValid) {
+      const uniqueErrors = [...new Set(promptValidation.errors)]
+      return new Response(
+        JSON.stringify({ 
+          error: uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy',
+          details: uniqueErrors,
+          type: 'validation_error'
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const moderation = moderateMessages(messages, {
+      checkToxicity: true,
+      checkProfanity: true,
+      checkSpam: true,
+      checkPersonalInfo: true,
+    })
+
+    if (!moderation.isSafe) {
+      const allReasons = moderation.results.flatMap(r => r.reasons)
+      const uniqueReasons = [...new Set(allReasons)]
+      return new Response(
+        JSON.stringify({ 
+          error: uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy',
+          details: uniqueReasons,
+          type: 'moderation_error'
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
 
     const messagesToSend = await enhanceMessagesWithFunctions(messages)
     const stream = (await createChatCompletion(messagesToSend, true, userName, responseMode, chainOfThought)) as AsyncIterable<any>
@@ -72,7 +114,11 @@ export async function POST(req: NextRequest) {
     const retryAfter = getRetryAfter(error)
     const errorMessage = getErrorMessage(error, 'Failed to stream AI response')
     
-    const errorData: any = { error: errorMessage, type: status === 429 ? 'rate_limit' : 'server' }
+    const errorData: any = { 
+      error: errorMessage, 
+      type: status === 429 ? 'rate_limit' : 'server',
+      details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+    }
     if (retryAfter) {
       errorData.retryAfter = retryAfter
     }

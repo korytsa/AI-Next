@@ -1,8 +1,9 @@
 export interface ChatError {
   message: string
-  type: 'rate_limit' | 'network' | 'server' | 'unknown'
+  type: 'rate_limit' | 'network' | 'server' | 'validation_error' | 'moderation_error' | 'unknown'
   retryable: boolean
-  retryAfter?: number 
+  retryAfter?: number
+  details?: string[]
 }
 
 export function parseError(error: any, response?: Response): ChatError {
@@ -35,11 +36,22 @@ export function parseError(error: any, response?: Response): ChatError {
   }
 
   if (response.status >= 400) {
-    const errorMessage = error.message || 'Invalid request. Please check your input.'
+    if (error.type === 'validation_error' || error.type === 'moderation_error') {
+      const errorMessage = error.error || error.message || 'Your request contains invalid content'
+      return {
+        message: errorMessage,
+        type: error.type,
+        retryable: false,
+        details: error.details || [],
+      }
+    }
+
+    const errorMessage = error.error || error.message || 'Invalid request. Please check your input.'
     return {
       message: errorMessage,
       type: 'server',
       retryable: false,
+      details: error.details,
     }
   }
 
