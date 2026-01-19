@@ -31,6 +31,7 @@ export default function ChatPage() {
     isLoadingMore,
     messagesStartRef,
     isExporting,
+    cancelRequest,
   } = useChat()
 
   return (
@@ -60,7 +61,7 @@ export default function ChatPage() {
         hasMoreMessages={hasMoreMessages}
         isLoadingMore={isLoadingMore}
       />
-      <ChatInput ref={inputRef} input={input} setInput={setInput} onSubmit={handleSubmit} loading={loading} />
+      <ChatInput ref={inputRef} input={input} setInput={setInput} onSubmit={handleSubmit} loading={loading} onCancel={cancelRequest} />
     </div>
   )
 }

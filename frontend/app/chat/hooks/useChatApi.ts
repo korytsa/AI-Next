@@ -25,6 +25,7 @@ export function useChatApi({
   const [loading, setLoading] = useState(false)
   const [totalTokens, setTotalTokens] = useState(0)
   const streamingContentRef = useRef<string>('')
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const handleStreamingSubmit = async (messagesToSend: Message[], retryCount = 0): Promise<void> => {
     const MAX_RETRIES = 3
@@ -32,6 +33,8 @@ export function useChatApi({
     
     addMessage(assistantMessage)
     streamingContentRef.current = ''
+
+    abortControllerRef.current = new AbortController()
 
     try {
       const response = await fetch('/api/chat/stream', {
@@ -46,6 +49,7 @@ export function useChatApi({
           responseMode: responseMode,
           chainOfThought: chainOfThought,
         }),
+        signal: abortControllerRef.current.signal,
       })
 
       if (!response.ok) {
@@ -75,55 +79,86 @@ export function useChatApi({
 
       let buffer = ''
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+      try {
+        while (true) {
+          if (abortControllerRef.current?.signal.aborted) {
+            reader.cancel()
+            break
+          }
 
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
+          const { done, value } = await reader.read()
+          if (done) break
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6)
-            if (data === '[DONE]') {
-              setLoading(false)
-              continue
-            }
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
 
-            try {
-              const parsed = JSON.parse(data)
-              if (parsed.error) {
-                const chatError = parseError(parsed.error)
-                updateLastMessage((prev) => ({
-                  ...prev,
-                  content: '',
-                  error: chatError,
-                }))
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6)
+              if (data === '[DONE]') {
                 setLoading(false)
-                return
+                continue
               }
-              
-              if (parsed.usage) {
-                setTotalTokens((prev) => prev + (parsed.usage.total_tokens || 0))
+
+              try {
+                const parsed = JSON.parse(data)
+                if (parsed.error) {
+                  const chatError = parseError(parsed.error)
+                  updateLastMessage((prev) => ({
+                    ...prev,
+                    content: '',
+                    error: chatError,
+                  }))
+                  setLoading(false)
+                  return
+                }
+                
+                if (parsed.usage) {
+                  setTotalTokens((prev) => prev + (parsed.usage.total_tokens || 0))
+                }
+                
+                if (parsed.content) {
+                  streamingContentRef.current += parsed.content
+                  updateLastMessage((prev) => ({
+                    ...prev,
+                    content: streamingContentRef.current,
+                  }))
+                  scrollToBottom()
+                }
+              } catch (e) {
               }
-              
-              if (parsed.content) {
-                streamingContentRef.current += parsed.content
-                updateLastMessage((prev) => ({
-                  ...prev,
-                  content: streamingContentRef.current,
-                }))
-                scrollToBottom()
-              }
-            } catch (e) {
             }
           }
+        }
+      } catch (readError) {
+        if ((readError as any).name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+          reader.cancel()
+        } else {
+          throw readError
+        }
+      } finally {
+        if (abortControllerRef.current?.signal.aborted) {
+          updateLastMessage((prev) => ({
+            ...prev,
+            content: prev.content || streamingContentRef.current || '[Request cancelled]',
+          }))
         }
       }
 
       setLoading(false)
+      abortControllerRef.current = null
     } catch (error: any) {
+      if (error.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+        updateLastMessage((prev) => ({
+          ...prev,
+          content: prev.content || '[Request cancelled]',
+        }))
+        setLoading(false)
+        abortControllerRef.current = null
+        return
+      }
+
       const chatError: ChatError = error && typeof error === 'object' && 'type' in error && 'retryable' in error
         ? error as ChatError
         : parseError(error)
@@ -139,12 +174,15 @@ export function useChatApi({
         return prev
       })
       setLoading(false)
+      abortControllerRef.current = null
       throw chatError
     }
   }
 
   const handleRegularSubmit = async (messagesToSend: Message[], retryCount = 0): Promise<void> => {
     const MAX_RETRIES = 3
+
+    abortControllerRef.current = new AbortController()
 
     try {
       const response = await fetch('/api/chat', {
@@ -159,6 +197,7 @@ export function useChatApi({
           responseMode: responseMode,
           chainOfThought: chainOfThought,
         }),
+        signal: abortControllerRef.current.signal,
       })
 
       const data = await response.json().catch(() => ({}))
@@ -188,11 +227,28 @@ export function useChatApi({
       }
       
       setLoading(false)
+      abortControllerRef.current = null
     } catch (error: any) {
+      if (error.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
+        setLoading(false)
+        abortControllerRef.current = null
+        return
+      }
+
       const chatError: ChatError = error && typeof error === 'object' && 'type' in error && 'retryable' in error
         ? error as ChatError
         : parseError(error)
+      setLoading(false)
+      abortControllerRef.current = null
       throw chatError
+    }
+  }
+
+  const cancelRequest = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+      setLoading(false)
     }
   }
 
@@ -234,5 +290,6 @@ export function useChatApi({
     handleStreamingSubmit,
     handleRegularSubmit,
     retryLastMessage,
+    cancelRequest,
   }
 }

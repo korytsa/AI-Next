@@ -45,6 +45,7 @@ export function useChat() {
     handleStreamingSubmit,
     handleRegularSubmit,
     retryLastMessage: retryLastMessageApi,
+    cancelRequest,
   } = useChatApi({
     allMessages,
     addMessage,
@@ -167,5 +168,6 @@ export function useChat() {
     hasMoreMessages,
     isLoadingMore,
     isExporting,
+    cancelRequest,
   }
 }
