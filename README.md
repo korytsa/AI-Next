@@ -16,10 +16,10 @@ cd frontend && npm install
 Create `frontend/.env.local`:
 
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
+GROQ_API_KEY=gsk_your_api_key_here
 ```
 
-Get your API key at [platform.openai.com](https://platform.openai.com/api-keys)
+Get your API key at [console.groq.com/keys](https://console.groq.com/keys)
 
 ### 3. Run the project
 
@@ -58,7 +58,27 @@ frontend/
 
 ## 🔒 Security
 
-⚠️ Never commit `.env.local` files with API keys!
+### API Key Security
+
+- ⚠️ **Never commit `.env.local` files with API keys!**
+- ✅ API keys are stored in environment variables only
+- ✅ API keys are validated on startup
+- ✅ API keys are automatically masked in error logs
+- ✅ `.env.local` files are excluded from git via `.gitignore`
+
+### Best Practices
+
+1. **Never hardcode API keys** in source code
+2. **Use `.env.local`** for local development (already in `.gitignore`)
+3. **Use environment variables** in production (Vercel, etc.)
+4. **Rotate keys** if they are accidentally exposed
+5. **Use different keys** for development and production
+
+### Environment Variables
+
+- `GROQ_API_KEY` - Your Groq API key (required)
+  - Format: `gsk_...`
+  - Get it at: [console.groq.com/keys](https://console.groq.com/keys)
 
 ## 📚 Resources
 

@@ -5,6 +5,7 @@ import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
 import { checkThrottle } from '@/app/lib/throttle-utils'
 import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
 import { moderateMessages } from '@/app/lib/content-moderation'
+import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 
 export async function POST(req: NextRequest) {
   try {
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error: any) {
-    console.error('Error in streaming chat API:', error)
+    console.error('Error in streaming chat API:', sanitizeErrorForLogging(error))
     
     const status = getErrorStatus(error)
     const retryAfter = getRetryAfter(error)

@@ -6,6 +6,7 @@ import { responseCache } from '@/app/lib/cache'
 import { checkThrottle } from '@/app/lib/throttle-utils'
 import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
 import { moderateMessages } from '@/app/lib/content-moderation'
+import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 
 export async function POST(req: NextRequest) {
   try {
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
     
     throw new Error('Unexpected response type')
   } catch (error: any) {
-    console.error('Error in chat API:', error)
+    console.error('Error in chat API:', sanitizeErrorForLogging(error))
     
     const status = getErrorStatus(error)
     const retryAfter = getRetryAfter(error)
