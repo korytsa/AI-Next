@@ -2,6 +2,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Message } from '../types'
 import { RotateCcw } from 'lucide-react'
+import { sanitizeText } from '@/app/lib/sanitization'
 
 interface MessageBubbleProps {
   message: Message
@@ -60,7 +61,7 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
         ) : message.role === 'assistant' ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
         ) : (
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p>{message.content}</p>
         )}
       </div>
     </div>

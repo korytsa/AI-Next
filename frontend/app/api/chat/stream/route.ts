@@ -6,6 +6,7 @@ import { checkThrottle } from '@/app/lib/throttle-utils'
 import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
 import { moderateMessages } from '@/app/lib/content-moderation'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
+import { sanitizeMessages } from '@/app/lib/sanitization'
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +24,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const promptValidation = validatePromptMessages(messages, {
+    const sanitizedMessages = sanitizeMessages(messages)
+
+    const promptValidation = validatePromptMessages(sanitizedMessages, {
       maxLength: 10000,
       checkInjection: true,
       checkSpecialChars: true,
@@ -42,7 +45,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const moderation = moderateMessages(messages, {
+    const moderation = moderateMessages(sanitizedMessages, {
       checkToxicity: true,
       checkProfanity: true,
       checkSpam: true,
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest) {
     }
 
 
-    const messagesToSend = await enhanceMessagesWithFunctions(messages)
+    const messagesToSend = await enhanceMessagesWithFunctions(sanitizedMessages)
     const stream = (await createChatCompletion(messagesToSend, true, userName, responseMode, chainOfThought)) as AsyncIterable<any>
 
     const encoder = new TextEncoder()

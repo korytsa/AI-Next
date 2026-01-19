@@ -6,6 +6,7 @@ import { responseCache } from '@/app/lib/cache'
 import { checkThrottle } from '@/app/lib/throttle-utils'
 import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
 import { moderateMessages } from '@/app/lib/content-moderation'
+import { sanitizeMessages } from '@/app/lib/sanitization'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const promptValidation = validatePromptMessages(messages, {
+    const sanitizedMessages = sanitizeMessages(messages)
+
+    const promptValidation = validatePromptMessages(sanitizedMessages, {
       maxLength: 10000,
       checkInjection: true,
       checkSpecialChars: true,
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const moderation = moderateMessages(messages, {
+    const moderation = moderateMessages(sanitizedMessages, {
       checkToxicity: true,
       checkProfanity: true,
       checkSpam: true,
@@ -64,7 +67,7 @@ export async function POST(req: NextRequest) {
     }
 
 
-    const messagesToSend = await enhanceMessagesWithFunctions(messages)
+    const messagesToSend = await enhanceMessagesWithFunctions(sanitizedMessages)
 
     if (useCache) {
       const cachedResponse = responseCache.get(messagesToSend, userName, responseMode, chainOfThought)

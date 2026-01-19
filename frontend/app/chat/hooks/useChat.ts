@@ -5,6 +5,7 @@ import { useMessages } from './useMessages'
 import { useUserSettings } from './useUserSettings'
 import { useChatApi } from './useChatApi'
 import { useExportWorker } from './useExportWorker'
+import { sanitizeText } from '@/app/lib/sanitization'
 
 export type { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
 
@@ -68,7 +69,13 @@ export function useChat() {
     e.preventDefault()
     if (!input.trim() || loading) return
 
-    const userMessage: Message = { role: 'user', content: input }
+    const sanitizedContent = sanitizeText(input, {
+      removeHtml: true,
+      normalizeWhitespace: true,
+      removeControlChars: true,
+    })
+
+    const userMessage: Message = { role: 'user', content: sanitizedContent }
     addMessage(userMessage)
     setInput('')
     setLoading(true)
