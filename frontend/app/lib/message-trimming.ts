@@ -3,13 +3,14 @@ export interface Message {
   content: string
 }
 
-export type TrimmingStrategy = 'last_n_messages' | 'last_n_tokens' | 'none'
+export type TrimmingStrategy = 'last_n_messages' | 'last_n_tokens' | 'smart' | 'none'
 
 export interface TrimmingOptions {
   strategy: TrimmingStrategy
   maxMessages?: number
   maxTokens?: number
   keepSystemMessage?: boolean
+  keepFirstMessages?: number
 }
 
 function estimateTokens(text: string): number {
@@ -23,9 +24,10 @@ function countTokens(messages: Message[]): number {
 export function trimMessages(
   messages: Message[],
   options: TrimmingOptions = {
-    strategy: 'last_n_messages',
-    maxMessages: 20,
+    strategy: 'smart',
+    maxTokens: 6000,
     keepSystemMessage: true,
+    keepFirstMessages: 2,
   }
 ): Message[] {
   if (options.strategy === 'none' || messages.length === 0) {
@@ -46,8 +48,8 @@ export function trimMessages(
     return trimmed
   }
 
-  if (options.strategy === 'last_n_tokens') {
-    const maxTokens = options.maxTokens || 3000
+  if (options.strategy === 'last_n_tokens' || options.strategy === 'smart') {
+    const maxTokens = options.maxTokens || 6000
     const result: Message[] = []
 
     if (options.keepSystemMessage !== false && systemMessages.length > 0) {
@@ -56,19 +58,52 @@ export function trimMessages(
 
     let currentTokens = countTokens(result)
 
+    if (options.strategy === 'smart' && options.keepFirstMessages && options.keepFirstMessages > 0) {
+      const firstMessages = nonSystemMessages.slice(0, options.keepFirstMessages)
+      const firstMessagesToKeep: Message[] = []
+      
+      for (const msg of firstMessages) {
+        const msgTokens = estimateTokens(msg.content)
+        if (currentTokens + msgTokens <= maxTokens) {
+          firstMessagesToKeep.push(msg)
+          currentTokens += msgTokens
+        } else {
+          break
+        }
+      }
+
+      const remainingTokens = maxTokens - currentTokens
+      const lastMessagesToKeep: Message[] = []
+      let lastTokens = 0
+
+      for (let i = nonSystemMessages.length - 1; i >= firstMessagesToKeep.length; i--) {
+        const msg = nonSystemMessages[i]
+        const msgTokens = estimateTokens(msg.content)
+
+        if (lastTokens + msgTokens <= remainingTokens) {
+          lastMessagesToKeep.unshift(msg)
+          lastTokens += msgTokens
+        } else {
+          break
+        }
+      }
+
+      return [...result, ...firstMessagesToKeep, ...lastMessagesToKeep]
+    }
+
     for (let i = nonSystemMessages.length - 1; i >= 0; i--) {
       const msg = nonSystemMessages[i]
       const msgTokens = estimateTokens(msg.content)
 
       if (currentTokens + msgTokens <= maxTokens) {
-        result.push(msg)
+        result.unshift(msg)
         currentTokens += msgTokens
       } else {
         break
       }
     }
 
-    return result.reverse()
+    return result
   }
 
   return messages

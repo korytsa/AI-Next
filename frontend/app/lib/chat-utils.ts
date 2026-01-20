@@ -69,9 +69,10 @@ export function prepareMessages(
   }
 
   const defaultTrimming: TrimmingOptions = {
-    strategy: 'last_n_tokens',
-    maxTokens: DEFAULT_MAX_TOKENS * 2,
+    strategy: 'smart',
+    maxTokens: DEFAULT_MAX_TOKENS * 3,
     keepSystemMessage: true,
+    keepFirstMessages: 2,
   }
 
   return trimMessages(allMessages, defaultTrimming)
