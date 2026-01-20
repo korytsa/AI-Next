@@ -11,9 +11,9 @@ interface ChatInputProps {
   onCancel?: () => void
 }
 
-export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(
+export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ input, setInput, onSubmit, loading, onCancel }, ref) => {
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value
       if (value.length <= MAX_MESSAGE_LENGTH) {
         setInput(value)
@@ -26,16 +26,24 @@ export const ChatInput = forwardRef<HTMLInputElement, ChatInputProps>(
     return (
       <form onSubmit={onSubmit} className="border-t p-4">
         <div className="flex flex-col gap-2 max-w-4xl mx-auto">
-          <div className="flex gap-2">
-            <input
+          <div className="flex gap-2 items-end">
+            <textarea
               ref={ref}
-              type="text"
               value={input}
               onChange={handleInputChange}
               placeholder="Enter a message..."
               maxLength={MAX_MESSAGE_LENGTH}
-              className="flex-1 px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+              rows={3}
+              className="flex-1 px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 resize-none overflow-y-auto"
               disabled={loading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  if (!loading && input.trim()) {
+                    onSubmit(e as any)
+                  }
+                }
+              }}
             />
             {loading && onCancel ? (
               <button

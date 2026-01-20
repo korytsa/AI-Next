@@ -5,7 +5,7 @@ import {
   getFewShotPrompt 
 } from './few-shot-examples'
 import { getChainOfThoughtPrompt, ChainOfThoughtMode } from './chain-of-thought'
-import { trimMessages, TrimmingOptions } from './message-trimming'
+import { trimMessages, trimAndSummarizeMessages, TrimmingOptions } from './message-trimming'
 
 export type ResponseMode = 'short' | 'detailed'
 
@@ -53,7 +53,7 @@ export function validateMessages(messages: any): boolean {
   return Array.isArray(messages) && messages.length > 0
 }
 
-export function prepareMessages(
+export async function prepareMessages(
   messages: any[], 
   userName?: string | null, 
   responseMode: ResponseMode = 'detailed',
@@ -63,22 +63,26 @@ export function prepareMessages(
   const systemMessage = getSystemMessage(userName, responseMode, true, chainOfThought)
   const allMessages = [systemMessage, ...messages]
 
-  if (trimmingOptions) {
-    const trimmed = trimMessages(allMessages, trimmingOptions)
-    return trimmed
-  }
-
-  const defaultTrimming: TrimmingOptions = {
-    strategy: 'smart',
-    maxTokens: DEFAULT_MAX_TOKENS * 3,
+  const options = trimmingOptions || {
+    strategy: 'summarize' as const,
+    maxTokens: 4000,
     keepSystemMessage: true,
     keepFirstMessages: 2,
+    summarizeThreshold: 0.5,
+    maxSummaryTokens: 200,
   }
 
-  return trimMessages(allMessages, defaultTrimming)
+  let prepared: any[]
+  if (options.strategy === 'summarize') {
+    prepared = await trimAndSummarizeMessages(allMessages, options)
+  } else {
+    prepared = trimMessages(allMessages, options)
+  }
+
+  return prepared
 }
 
-export function createChatCompletion(
+export async function createChatCompletion(
   messages: any[], 
   stream: boolean = false, 
   userName?: string | null, 
@@ -86,7 +90,7 @@ export function createChatCompletion(
   chainOfThought: ChainOfThoughtMode = 'none',
   trimmingOptions?: TrimmingOptions
 ) {
-  const preparedMessages = prepareMessages(messages, userName, responseMode, chainOfThought, trimmingOptions)
+  const preparedMessages = await prepareMessages(messages, userName, responseMode, chainOfThought, trimmingOptions)
   
   return openai.chat.completions.create({
     model: DEFAULT_MODEL,

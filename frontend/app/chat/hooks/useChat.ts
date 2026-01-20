@@ -13,7 +13,7 @@ export function useChat() {
   const [input, setInput] = useState('')
   const [useStreaming, setUseStreaming] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const {
     allMessages,
