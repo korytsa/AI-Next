@@ -10,6 +10,7 @@ interface UseChatApiProps {
   userName?: string | null
   responseMode: ResponseMode
   chainOfThought: ChainOfThoughtMode
+  selectedModel: string
   scrollToBottom: () => void
 }
 
@@ -20,6 +21,7 @@ export function useChatApi({
   userName,
   responseMode,
   chainOfThought,
+  selectedModel,
   scrollToBottom,
 }: UseChatApiProps) {
   const [loading, setLoading] = useState(false)
@@ -48,6 +50,7 @@ export function useChatApi({
           userName: userName,
           responseMode: responseMode,
           chainOfThought: chainOfThought,
+          model: selectedModel,
         }),
         signal: abortControllerRef.current.signal,
       })
@@ -196,6 +199,7 @@ export function useChatApi({
           userName: userName,
           responseMode: responseMode,
           chainOfThought: chainOfThought,
+          model: selectedModel,
         }),
         signal: abortControllerRef.current.signal,
       })

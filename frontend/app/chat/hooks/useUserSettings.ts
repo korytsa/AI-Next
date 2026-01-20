@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import { DEFAULT_MODEL_ID } from '@/app/lib/models'
 
 const USER_NAME_KEY = 'ai-chat-username'
 const RESPONSE_MODE_KEY = 'ai-chat-response-mode'
 const CHAIN_OF_THOUGHT_KEY = 'ai-chat-chain-of-thought'
+const SELECTED_MODEL_KEY = 'ai-chat-selected-model'
 
 export type ResponseMode = 'short' | 'detailed'
 export type ChainOfThoughtMode = 'none' | 'short' | 'detailed'
@@ -85,11 +87,36 @@ const saveChainOfThoughtToStorage = (mode: ChainOfThoughtMode) => {
   }
 }
 
+const loadSelectedModelFromStorage = (): string => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_MODEL_ID
+  }
+
+  try {
+    const stored = localStorage.getItem(SELECTED_MODEL_KEY)
+    return stored || DEFAULT_MODEL_ID
+  } catch (error) {
+    console.error('Failed to load selected model from localStorage:', error)
+    return DEFAULT_MODEL_ID
+  }
+}
+
+const saveSelectedModelToStorage = (model: string) => {
+  if (typeof window === 'undefined') return
+
+  try {
+    localStorage.setItem(SELECTED_MODEL_KEY, model)
+  } catch (error) {
+    console.error('Failed to save selected model to localStorage:', error)
+  }
+}
+
 export function useUserSettings() {
   const DEFAULT_USER_NAME = 'user'
   const [userName, setUserName] = useState<string>(DEFAULT_USER_NAME)
   const [responseMode, setResponseMode] = useState<ResponseMode>('detailed')
   const [chainOfThought, setChainOfThought] = useState<ChainOfThoughtMode>('none')
+  const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL_ID)
   const isHydrated = useRef(false)
 
   useEffect(() => {
@@ -107,6 +134,9 @@ export function useUserSettings() {
       
       const loadedChainOfThought = loadChainOfThoughtFromStorage()
       setChainOfThought(loadedChainOfThought)
+      
+      const loadedModel = loadSelectedModelFromStorage()
+      setSelectedModel(loadedModel)
       
       isHydrated.current = true
     }
@@ -128,6 +158,11 @@ export function useUserSettings() {
     saveChainOfThoughtToStorage(mode)
   }
 
+  const handleSetSelectedModel = (model: string) => {
+    setSelectedModel(model)
+    saveSelectedModelToStorage(model)
+  }
+
   return {
     userName,
     handleSetUserName,
@@ -135,5 +170,7 @@ export function useUserSettings() {
     handleSetResponseMode,
     chainOfThought,
     handleSetChainOfThought,
+    selectedModel,
+    handleSetSelectedModel,
   }
 }

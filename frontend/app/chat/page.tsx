@@ -26,6 +26,8 @@ export default function ChatPage() {
     totalTokens,
     chainOfThought,
     handleSetChainOfThought,
+    selectedModel,
+    handleSetSelectedModel,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
@@ -49,6 +51,8 @@ export default function ChatPage() {
         totalTokens={totalTokens}
         chainOfThought={chainOfThought}
         onSetChainOfThought={handleSetChainOfThought}
+        selectedModel={selectedModel}
+        onSetSelectedModel={handleSetSelectedModel}
         isExporting={isExporting}
       />
       <MessagesList 

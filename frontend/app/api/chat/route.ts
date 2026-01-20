@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return throttleCheck.response as NextResponse
     }
 
-    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', useCache = false } = await req.json()
+    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model, useCache = false } = await req.json()
 
     if (!validateMessagesFormat(messages)) {
       return NextResponse.json(
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const completion = await createChatCompletion(messagesToSend, false, userName, responseMode, chainOfThought)
+    const completion = await createChatCompletion(messagesToSend, false, userName, responseMode, chainOfThought, undefined, model)
 
     if ('choices' in completion) {
       const response = {

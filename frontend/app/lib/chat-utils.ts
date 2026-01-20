@@ -88,12 +88,13 @@ export async function createChatCompletion(
   userName?: string | null, 
   responseMode: ResponseMode = 'detailed',
   chainOfThought: ChainOfThoughtMode = 'none',
-  trimmingOptions?: TrimmingOptions
+  trimmingOptions?: TrimmingOptions,
+  model?: string
 ) {
   const preparedMessages = await prepareMessages(messages, userName, responseMode, chainOfThought, trimmingOptions)
   
   return openai.chat.completions.create({
-    model: DEFAULT_MODEL,
+    model: model || DEFAULT_MODEL,
     messages: preparedMessages,
     temperature: DEFAULT_TEMPERATURE,
     stream,

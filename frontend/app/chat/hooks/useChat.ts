@@ -36,6 +36,8 @@ export function useChat() {
     handleSetResponseMode,
     chainOfThought,
     handleSetChainOfThought,
+    selectedModel,
+    handleSetSelectedModel,
   } = useUserSettings()
 
   const {
@@ -53,6 +55,7 @@ export function useChat() {
     userName,
     responseMode,
     chainOfThought,
+    selectedModel,
     scrollToBottom,
   })
 
@@ -164,6 +167,8 @@ export function useChat() {
     totalTokens,
     chainOfThought,
     handleSetChainOfThought,
+    selectedModel,
+    handleSetSelectedModel,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,

@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return throttleCheck.response as Response
     }
 
-    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none' } = await req.json()
+    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model } = await req.json()
 
     if (!validateMessagesFormat(messages)) {
       return new Response(
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
 
 
     const messagesToSend = await enhanceMessagesWithFunctions(sanitizedMessages)
-    const stream = (await createChatCompletion(messagesToSend, true, userName, responseMode, chainOfThought)) as AsyncIterable<any>
+    const stream = (await createChatCompletion(messagesToSend, true, userName, responseMode, chainOfThought, undefined, model)) as AsyncIterable<any>
 
     const encoder = new TextEncoder()
     const readableStream = new ReadableStream({

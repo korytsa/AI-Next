@@ -1,5 +1,6 @@
 import OpenAI from 'openai'
 import { getApiKeyFromEnv, maskApiKey } from './api-key-security'
+import { DEFAULT_MODEL_ID } from './models'
 
 let groqApiKey: string | null = null
 
@@ -23,6 +24,7 @@ export const openai = new OpenAI({
 })
 
 
-export const DEFAULT_MODEL = 'llama-3.1-8b-instant'
+export const DEFAULT_MODEL = DEFAULT_MODEL_ID
 export const DEFAULT_TEMPERATURE = 0.5              
 export const DEFAULT_MAX_TOKENS = 2000
+export { AVAILABLE_MODELS, getModelInfo, type ModelInfo } from './models'
