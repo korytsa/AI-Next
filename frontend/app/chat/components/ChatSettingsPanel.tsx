@@ -1,4 +1,4 @@
-import { Download, BarChart3 } from 'lucide-react'
+import { Download, BarChart3, AlertTriangle } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
 import Link from 'next/link'
@@ -150,6 +150,14 @@ export function ChatSettingsPanel({
         >
           <BarChart3 className="w-4 h-4" />
           Metrics
+        </Link>
+        <Link
+          href="/errors"
+          className="px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
+          title="View error tracking"
+        >
+          <AlertTriangle className="w-4 h-4" />
+          Errors
         </Link>
       </div>
     </div>

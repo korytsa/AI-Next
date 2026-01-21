@@ -10,6 +10,7 @@ import { sanitizeMessages } from '@/app/lib/sanitization'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 import { recordMetric } from '@/app/lib/metrics'
 import { DEFAULT_MODEL_ID } from '@/app/lib/models'
+import { trackError } from '@/app/lib/error-tracker'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -46,6 +47,19 @@ export async function POST(req: NextRequest) {
 
     if (!promptValidation.isValid) {
       const uniqueErrors = [...new Set(promptValidation.errors)]
+      
+      const validationError = new Error(uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy')
+      validationError.name = 'ValidationError'
+      
+      trackError(validationError, {
+        endpoint: '/api/chat',
+        method: 'POST',
+        statusCode: 400,
+        type: 'validation_error',
+        model: selectedModel,
+        details: uniqueErrors,
+      })
+      
       return NextResponse.json(
         { 
           error: uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy',
@@ -66,6 +80,19 @@ export async function POST(req: NextRequest) {
     if (!moderation.isSafe) {
       const allReasons = moderation.results.flatMap(r => r.reasons)
       const uniqueReasons = [...new Set(allReasons)]
+      
+      const moderationError = new Error(uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy')
+      moderationError.name = 'ModerationError'
+      
+      trackError(moderationError, {
+        endpoint: '/api/chat',
+        method: 'POST',
+        statusCode: 400,
+        type: 'moderation_error',
+        model: selectedModel,
+        reasons: uniqueReasons,
+      })
+      
       return NextResponse.json(
         { 
           error: uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy',
@@ -119,9 +146,19 @@ export async function POST(req: NextRequest) {
     const duration = Date.now() - startTime
     recordMetric(selectedModel, requestTokens, responseTokens, duration, 'chat', 'error')
     
+    const errorStatus = getErrorStatus(error)
+    
+    trackError(error, {
+      endpoint: '/api/chat',
+      method: 'POST',
+      statusCode: errorStatus,
+      model: selectedModel,
+      requestTokens,
+      responseTokens,
+    })
+    
     console.error('Error in chat API:', sanitizeErrorForLogging(error))
     
-    const errorStatus = getErrorStatus(error)
     const retryAfter = getRetryAfter(error)
     const errorMessage = getErrorMessage(error)
     
