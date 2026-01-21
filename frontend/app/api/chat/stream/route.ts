@@ -3,10 +3,8 @@ import { validateMessages as validateMessagesFormat, createChatCompletion } from
 import { getErrorStatus, getRetryAfter, getErrorMessage } from '@/app/lib/api-utils'
 import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
 import { checkThrottle } from '@/app/lib/throttle-utils'
-import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
-import { moderateMessages } from '@/app/lib/content-moderation'
+import { validateAndModerateRequest } from '@/app/lib/request-validation'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
-import { sanitizeMessages } from '@/app/lib/sanitization'
 import { recordMetric } from '@/app/lib/metrics'
 import { DEFAULT_MODEL_ID } from '@/app/lib/models'
 import { trackError } from '@/app/lib/error-tracker'
@@ -33,75 +31,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const sanitizedMessages = sanitizeMessages(messages)
-
-    const promptValidation = validatePromptMessages(sanitizedMessages, {
-      maxLength: 10000,
-      checkInjection: true,
-      checkSpecialChars: true,
-      checkLength: true,
-    })
-
-    if (!promptValidation.isValid) {
-      const uniqueErrors = [...new Set(promptValidation.errors)]
-      
-      const validationError = new Error(uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy')
-      validationError.name = 'ValidationError'
-      
-      trackError(validationError, {
-        endpoint: '/api/chat/stream',
-        method: 'POST',
-        statusCode: 400,
-        type: 'validation_error',
-        model: selectedModel,
-        details: uniqueErrors,
-      })
-      
-      return new Response(
-        JSON.stringify({ 
-          error: uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy',
-          details: uniqueErrors,
-          type: 'validation_error'
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
+    const validation = await validateAndModerateRequest(messages, '/api/chat/stream', selectedModel, true)
+    if (!validation.isValid) {
+      return validation.response as Response
     }
 
-    const moderation = moderateMessages(sanitizedMessages, {
-      checkToxicity: true,
-      checkProfanity: true,
-      checkSpam: true,
-      checkPersonalInfo: true,
-    })
-
-    if (!moderation.isSafe) {
-      const allReasons = moderation.results.flatMap(r => r.reasons)
-      const uniqueReasons = [...new Set(allReasons)]
-      
-      const moderationError = new Error(uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy')
-      moderationError.name = 'ModerationError'
-      
-      trackError(moderationError, {
-        endpoint: '/api/chat/stream',
-        method: 'POST',
-        statusCode: 400,
-        type: 'moderation_error',
-        model: selectedModel,
-        reasons: uniqueReasons,
-      })
-      
-      return new Response(
-        JSON.stringify({ 
-          error: uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy',
-          details: uniqueReasons,
-          type: 'moderation_error'
-        }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
-
-    const messagesToSend = await enhanceMessagesWithFunctions(sanitizedMessages)
+    const messagesToSend = await enhanceMessagesWithFunctions(validation.sanitizedMessages!)
     const stream = (await createChatCompletion(messagesToSend, true, userName, responseMode, chainOfThought, undefined, model)) as AsyncIterable<any>
 
     const encoder = new TextEncoder()

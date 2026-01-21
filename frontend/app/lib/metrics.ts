@@ -78,9 +78,7 @@ class MetricsStore {
     }
 
     const latencyByModel: Record<string, number> = {}
-    const latencyByEndpoint: Record<string, number> = {}
     const countByModel: Record<string, number> = {}
-    const countByEndpoint: Record<string, number> = {}
 
     successful.forEach((entry) => {
       if (!latencyByModel[entry.model]) {
@@ -89,21 +87,10 @@ class MetricsStore {
       }
       latencyByModel[entry.model] += entry.duration
       countByModel[entry.model] += 1
-
-      if (!latencyByEndpoint[entry.endpoint]) {
-        latencyByEndpoint[entry.endpoint] = 0
-        countByEndpoint[entry.endpoint] = 0
-      }
-      latencyByEndpoint[entry.endpoint] += entry.duration
-      countByEndpoint[entry.endpoint] += 1
     })
 
     Object.keys(latencyByModel).forEach((model) => {
       latencyByModel[model] = Math.round(latencyByModel[model] / countByModel[model])
-    })
-
-    Object.keys(latencyByEndpoint).forEach((endpoint) => {
-      latencyByEndpoint[endpoint] = Math.round(latencyByEndpoint[endpoint] / countByEndpoint[endpoint])
     })
 
     const tokensPerSecondByModel: Record<string, number> = {}
@@ -163,7 +150,6 @@ class MetricsStore {
       minLatency: Math.round(minLatency),
       maxLatency: Math.round(maxLatency),
       latencyByModel: latencyByModel || {},
-      latencyByEndpoint: latencyByEndpoint || {},
       tokensPerSecondByModel: tokensPerSecondByModel || {},
       byModel,
       byEndpoint,

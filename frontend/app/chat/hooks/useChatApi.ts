@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
 import { Message } from '../types'
-import { parseError, ChatError } from '@/app/lib/error-handler'
+import { ChatError } from '@/app/lib/error-handler'
 import { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
+import { parseChatError, createErrorMessage } from './useChatApiHelpers'
 
 interface UseChatApiProps {
   allMessages: Message[]
@@ -57,9 +58,8 @@ export function useChatApi({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        const chatError = parseError(errorData, response)
+        const chatError = parseChatError(errorData)
         
-        // Ошибки валидации и модерации не ретраятся
         if (chatError.type === 'validation_error' || chatError.type === 'moderation_error') {
           throw chatError
         }
@@ -107,12 +107,8 @@ export function useChatApi({
               try {
                 const parsed = JSON.parse(data)
                 if (parsed.error) {
-                  const chatError = parseError(parsed.error)
-                  updateLastMessage((prev) => ({
-                    ...prev,
-                    content: '',
-                    error: chatError,
-                  }))
+                  const chatError = parseChatError(parsed.error)
+                  updateLastMessage((prev) => createErrorMessage(prev, chatError))
                   setLoading(false)
                   return
                 }
@@ -162,20 +158,8 @@ export function useChatApi({
         return
       }
 
-      const chatError: ChatError = error && typeof error === 'object' && 'type' in error && 'retryable' in error
-        ? error as ChatError
-        : parseError(error)
-      
-      updateLastMessage((prev) => {
-        if (prev.role === 'assistant') {
-          return {
-            ...prev,
-            content: '',
-            error: chatError,
-          }
-        }
-        return prev
-      })
+      const chatError = parseChatError(error)
+      updateLastMessage((prev) => createErrorMessage(prev, chatError))
       setLoading(false)
       abortControllerRef.current = null
       throw chatError
@@ -207,9 +191,8 @@ export function useChatApi({
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        const chatError = parseError(data, response)
+        const chatError = parseChatError(data)
         
-        // Ошибки валидации и модерации не ретраятся
         if (chatError.type === 'validation_error' || chatError.type === 'moderation_error') {
           throw chatError
         }
@@ -239,9 +222,7 @@ export function useChatApi({
         return
       }
 
-      const chatError: ChatError = error && typeof error === 'object' && 'type' in error && 'retryable' in error
-        ? error as ChatError
-        : parseError(error)
+      const chatError = parseChatError(error)
       setLoading(false)
       abortControllerRef.current = null
       throw chatError
@@ -271,15 +252,8 @@ export function useChatApi({
             await handleRegularSubmit(messagesToRetry)
           }
         } catch (error: any) {
-          const chatError: ChatError = error && typeof error === 'object' && 'type' in error && 'retryable' in error
-            ? error as ChatError
-            : parseError(error)
-          
-          updateLastMessage((prev) => ({
-            ...prev,
-            content: '',
-            error: chatError,
-          }))
+          const chatError = parseChatError(error)
+          updateLastMessage((prev) => createErrorMessage(prev, chatError))
           setLoading(false)
         }
         break

@@ -4,9 +4,7 @@ import { getErrorStatus, getRetryAfter, getErrorMessage } from '@/app/lib/api-ut
 import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
 import { responseCache } from '@/app/lib/cache'
 import { checkThrottle } from '@/app/lib/throttle-utils'
-import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-validator'
-import { moderateMessages } from '@/app/lib/content-moderation'
-import { sanitizeMessages } from '@/app/lib/sanitization'
+import { validateAndModerateRequest } from '@/app/lib/request-validation'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 import { recordMetric } from '@/app/lib/metrics'
 import { DEFAULT_MODEL_ID } from '@/app/lib/models'
@@ -16,7 +14,6 @@ export async function POST(req: NextRequest) {
   const startTime = Date.now()
   let requestTokens = 0
   let responseTokens = 0
-  let status: 'success' | 'error' = 'success'
   let selectedModel = DEFAULT_MODEL_ID
 
   try {
@@ -36,75 +33,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const sanitizedMessages = sanitizeMessages(messages)
-
-    const promptValidation = validatePromptMessages(sanitizedMessages, {
-      maxLength: 10000,
-      checkInjection: true,
-      checkSpecialChars: true,
-      checkLength: true,
-    })
-
-    if (!promptValidation.isValid) {
-      const uniqueErrors = [...new Set(promptValidation.errors)]
-      
-      const validationError = new Error(uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy')
-      validationError.name = 'ValidationError'
-      
-      trackError(validationError, {
-        endpoint: '/api/chat',
-        method: 'POST',
-        statusCode: 400,
-        type: 'validation_error',
-        model: selectedModel,
-        details: uniqueErrors,
-      })
-      
-      return NextResponse.json(
-        { 
-          error: uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy',
-          details: uniqueErrors,
-          type: 'validation_error'
-        },
-        { status: 400 }
-      )
+    const validation = await validateAndModerateRequest(messages, '/api/chat', selectedModel, false)
+    if (!validation.isValid) {
+      return validation.response as NextResponse
     }
 
-    const moderation = moderateMessages(sanitizedMessages, {
-      checkToxicity: true,
-      checkProfanity: true,
-      checkSpam: true,
-      checkPersonalInfo: true,
-    })
-
-    if (!moderation.isSafe) {
-      const allReasons = moderation.results.flatMap(r => r.reasons)
-      const uniqueReasons = [...new Set(allReasons)]
-      
-      const moderationError = new Error(uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy')
-      moderationError.name = 'ModerationError'
-      
-      trackError(moderationError, {
-        endpoint: '/api/chat',
-        method: 'POST',
-        statusCode: 400,
-        type: 'moderation_error',
-        model: selectedModel,
-        reasons: uniqueReasons,
-      })
-      
-      return NextResponse.json(
-        { 
-          error: uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy',
-          details: uniqueReasons,
-          type: 'moderation_error'
-        },
-        { status: 400 }
-      )
-    }
-
-
-    const messagesToSend = await enhanceMessagesWithFunctions(sanitizedMessages)
+    const messagesToSend = await enhanceMessagesWithFunctions(validation.sanitizedMessages!)
 
     if (useCache) {
       const cachedResponse = responseCache.get(messagesToSend, userName, responseMode, chainOfThought)
@@ -142,7 +76,6 @@ export async function POST(req: NextRequest) {
     
     throw new Error('Unexpected response type')
   } catch (error: any) {
-    status = 'error'
     const duration = Date.now() - startTime
     recordMetric(selectedModel, requestTokens, responseTokens, duration, 'chat', 'error')
     

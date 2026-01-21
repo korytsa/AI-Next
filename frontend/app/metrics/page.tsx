@@ -18,7 +18,6 @@ interface MetricsData {
   minLatency: number
   maxLatency: number
   latencyByModel: Record<string, number>
-  latencyByEndpoint: Record<string, number>
   tokensPerSecondByModel: Record<string, number>
   byModel: Record<string, { requests: number; tokens: number; cost: number }>
   byEndpoint: { chat: number; stream: number }

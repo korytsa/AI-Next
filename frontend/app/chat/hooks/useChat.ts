@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { Message } from '../types'
-import { parseError, ChatError } from '@/app/lib/error-handler'
+import { ChatError } from '@/app/lib/error-handler'
 import { useMessages } from './useMessages'
 import { useUserSettings } from './useUserSettings'
 import { useChatApi } from './useChatApi'
 import { useExportWorker } from './useExportWorker'
 import { sanitizeText } from '@/app/lib/sanitization'
+import { parseChatError, createErrorMessage } from './useChatApiHelpers'
 
 export type { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
 
@@ -93,24 +94,8 @@ export function useChat() {
         await handleRegularSubmit(messagesToSend)
       }
     } catch (error: any) {
-      const chatError: ChatError = error && typeof error === 'object' && 'type' in error && 'retryable' in error
-        ? error as ChatError
-        : parseError(error)
-      
-      updateLastMessage((prev) => {
-        if (prev.role === 'assistant') {
-          return {
-            ...prev,
-            content: '',
-            error: chatError,
-          }
-        }
-        return {
-          role: 'assistant',
-          content: '',
-          error: chatError,
-        }
-      })
+      const chatError = parseChatError(error)
+      updateLastMessage((prev) => createErrorMessage(prev, chatError))
       setLoading(false)
     }
   }
