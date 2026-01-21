@@ -67,6 +67,66 @@ class MetricsStore {
     const totalDuration = successful.reduce((sum, e) => sum + e.duration, 0)
     const avgLatency = successful.length > 0 ? totalDuration / successful.length : 0
 
+    let minLatency = 0
+    let maxLatency = 0
+    if (successful.length > 0) {
+      const durations = successful.map((e) => e.duration).filter((d) => d >= 0)
+      if (durations.length > 0) {
+        minLatency = durations.reduce((min, d) => Math.min(min, d), durations[0])
+        maxLatency = durations.reduce((max, d) => Math.max(max, d), durations[0])
+      }
+    }
+
+    const latencyByModel: Record<string, number> = {}
+    const latencyByEndpoint: Record<string, number> = {}
+    const countByModel: Record<string, number> = {}
+    const countByEndpoint: Record<string, number> = {}
+
+    successful.forEach((entry) => {
+      if (!latencyByModel[entry.model]) {
+        latencyByModel[entry.model] = 0
+        countByModel[entry.model] = 0
+      }
+      latencyByModel[entry.model] += entry.duration
+      countByModel[entry.model] += 1
+
+      if (!latencyByEndpoint[entry.endpoint]) {
+        latencyByEndpoint[entry.endpoint] = 0
+        countByEndpoint[entry.endpoint] = 0
+      }
+      latencyByEndpoint[entry.endpoint] += entry.duration
+      countByEndpoint[entry.endpoint] += 1
+    })
+
+    Object.keys(latencyByModel).forEach((model) => {
+      latencyByModel[model] = Math.round(latencyByModel[model] / countByModel[model])
+    })
+
+    Object.keys(latencyByEndpoint).forEach((endpoint) => {
+      latencyByEndpoint[endpoint] = Math.round(latencyByEndpoint[endpoint] / countByEndpoint[endpoint])
+    })
+
+    const tokensPerSecondByModel: Record<string, number> = {}
+    const tpsCountByModel: Record<string, number> = {}
+    
+    successful.forEach((entry) => {
+      if (entry.duration > 0 && entry.totalTokens > 0) {
+        const tps = (entry.totalTokens / entry.duration) * 1000
+        if (!tokensPerSecondByModel[entry.model]) {
+          tokensPerSecondByModel[entry.model] = 0
+          tpsCountByModel[entry.model] = 0
+        }
+        tokensPerSecondByModel[entry.model] += tps
+        tpsCountByModel[entry.model] += 1
+      }
+    })
+
+    Object.keys(tokensPerSecondByModel).forEach((model) => {
+      if (tpsCountByModel[model] > 0) {
+        tokensPerSecondByModel[model] = parseFloat((tokensPerSecondByModel[model] / tpsCountByModel[model]).toFixed(2))
+      }
+    })
+
     let totalCost = 0
     const byModel: Record<string, { requests: number; tokens: number; cost: number }> = {}
 
@@ -100,6 +160,11 @@ class MetricsStore {
       totalTokens,
       totalCost: parseFloat(totalCost.toFixed(6)),
       avgLatency: Math.round(avgLatency),
+      minLatency: Math.round(minLatency),
+      maxLatency: Math.round(maxLatency),
+      latencyByModel: latencyByModel || {},
+      latencyByEndpoint: latencyByEndpoint || {},
+      tokensPerSecondByModel: tokensPerSecondByModel || {},
       byModel,
       byEndpoint,
     }

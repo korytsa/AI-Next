@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { BarChart3, RefreshCw, Trash2, TrendingUp, Clock, DollarSign, Activity } from 'lucide-react'
+import { BarChart3, RefreshCw, Trash2, TrendingUp, DollarSign, Activity } from 'lucide-react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
@@ -15,6 +15,11 @@ interface MetricsData {
   totalTokens: number
   totalCost: number
   avgLatency: number
+  minLatency: number
+  maxLatency: number
+  latencyByModel: Record<string, number>
+  latencyByEndpoint: Record<string, number>
+  tokensPerSecondByModel: Record<string, number>
   byModel: Record<string, { requests: number; tokens: number; cost: number }>
   byEndpoint: { chat: number; stream: number }
 }
@@ -139,7 +144,7 @@ export default function MetricsPage() {
 
         {metrics && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total Requests</span>
@@ -172,20 +177,34 @@ export default function MetricsPage() {
                   Avg: {formatCost(metrics.totalRequests > 0 ? metrics.totalCost / metrics.totalRequests : 0)} per request
                 </div>
               </div>
+            </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Avg Latency</span>
-                  <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="text-3xl font-bold">{metrics.avgLatency}ms</div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {metrics.successfulRequests > 0
-                    ? `${formatNumber(Math.round(metrics.totalTokens / metrics.successfulRequests))} tokens/request`
-                    : 'N/A'}
+            {metrics.successfulRequests > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow mb-8">
+                <h2 className="text-xl font-bold mb-4">Response Time Range</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Fastest</div>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                      {metrics.minLatency ?? 0}ms
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Best response time</div>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Average</div>
+                    <div className="text-2xl font-bold">{metrics.avgLatency ?? 0}ms</div>
+                    <div className="text-xs text-gray-500 mt-1">Mean response time</div>
+                  </div>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Slowest</div>
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+                      {metrics.maxLatency ?? 0}ms
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Worst response time</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow mb-8">
               <h2 className="text-xl font-bold mb-4">By Model</h2>
@@ -197,6 +216,8 @@ export default function MetricsPage() {
                       <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Requests</th>
                       <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Tokens</th>
                       <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Cost</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Avg Latency</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Tokens/sec</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -206,11 +227,21 @@ export default function MetricsPage() {
                         <td className="py-3 px-4 text-sm text-right">{formatNumber(data.requests)}</td>
                         <td className="py-3 px-4 text-sm text-right">{formatNumber(data.tokens)}</td>
                         <td className="py-3 px-4 text-sm text-right">{formatCost(data.cost)}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {metrics.latencyByModel && metrics.latencyByModel[model] 
+                            ? `${metrics.latencyByModel[model]}ms` 
+                            : 'N/A'}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {metrics.tokensPerSecondByModel && metrics.tokensPerSecondByModel[model] 
+                            ? `${metrics.tokensPerSecondByModel[model]}` 
+                            : 'N/A'}
+                        </td>
                       </tr>
                     ))}
                     {Object.keys(metrics.byModel).length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-8 text-center text-gray-500">
+                        <td colSpan={6} className="py-8 text-center text-gray-500">
                           No data available
                         </td>
                       </tr>
