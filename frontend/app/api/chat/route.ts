@@ -8,15 +8,25 @@ import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-val
 import { moderateMessages } from '@/app/lib/content-moderation'
 import { sanitizeMessages } from '@/app/lib/sanitization'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
+import { recordMetric } from '@/app/lib/metrics'
+import { DEFAULT_MODEL_ID } from '@/app/lib/models'
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now()
+  let requestTokens = 0
+  let responseTokens = 0
+  let status: 'success' | 'error' = 'success'
+  let selectedModel = DEFAULT_MODEL_ID
+
   try {
     const throttleCheck = checkThrottle(req)
     if (!throttleCheck.allowed) {
       return throttleCheck.response as NextResponse
     }
 
-    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model, useCache = false } = await req.json()
+    const body = await req.json()
+    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model, useCache = false } = body
+    selectedModel = model || DEFAULT_MODEL_ID
 
     if (!validateMessagesFormat(messages)) {
       return NextResponse.json(
@@ -87,6 +97,12 @@ export async function POST(req: NextRequest) {
         usage: completion.usage,
       }
 
+      // Record metrics
+      requestTokens = completion.usage?.prompt_tokens || 0
+      responseTokens = completion.usage?.completion_tokens || 0
+      const duration = Date.now() - startTime
+      recordMetric(selectedModel, requestTokens, responseTokens, duration, 'chat', 'success')
+
       if (useCache) {
         responseCache.set(messagesToSend, response, userName, responseMode, chainOfThought)
       }
@@ -99,9 +115,13 @@ export async function POST(req: NextRequest) {
     
     throw new Error('Unexpected response type')
   } catch (error: any) {
+    status = 'error'
+    const duration = Date.now() - startTime
+    recordMetric(selectedModel, requestTokens, responseTokens, duration, 'chat', 'error')
+    
     console.error('Error in chat API:', sanitizeErrorForLogging(error))
     
-    const status = getErrorStatus(error)
+    const errorStatus = getErrorStatus(error)
     const retryAfter = getRetryAfter(error)
     const errorMessage = getErrorMessage(error)
     
@@ -115,7 +135,7 @@ export async function POST(req: NextRequest) {
         error: errorMessage,
         details: process.env.NODE_ENV === 'development' ? error?.message : undefined
       },
-      { status, headers }
+      { status: errorStatus, headers }
     )
   }
 }

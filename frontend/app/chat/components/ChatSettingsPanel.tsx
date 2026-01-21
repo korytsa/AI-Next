@@ -1,6 +1,7 @@
-import { Download } from 'lucide-react'
+import { Download, BarChart3 } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
+import Link from 'next/link'
 
 interface ChatSettingsPanelProps {
   useStreaming: boolean
@@ -142,6 +143,14 @@ export function ChatSettingsPanel({
             {isExporting ? 'Exporting...' : 'Export'}
           </button>
         )}
+        <Link
+          href="/metrics"
+          className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-2"
+          title="View API metrics"
+        >
+          <BarChart3 className="w-4 h-4" />
+          Metrics
+        </Link>
       </div>
     </div>
   )

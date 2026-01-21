@@ -7,8 +7,15 @@ import { validateMessages as validatePromptMessages } from '@/app/lib/prompt-val
 import { moderateMessages } from '@/app/lib/content-moderation'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 import { sanitizeMessages } from '@/app/lib/sanitization'
+import { recordMetric } from '@/app/lib/metrics'
+import { DEFAULT_MODEL_ID } from '@/app/lib/models'
 
 export async function POST(req: NextRequest) {
+  const startTime = Date.now()
+  let requestTokens = 0
+  let responseTokens = 0
+  let selectedModel = DEFAULT_MODEL_ID
+
   try {
     const throttleCheck = checkThrottle(req)
     if (!throttleCheck.allowed) {
@@ -16,6 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model } = await req.json()
+    selectedModel = model || DEFAULT_MODEL_ID
 
     if (!validateMessagesFormat(messages)) {
       return new Response(
@@ -84,11 +92,20 @@ export async function POST(req: NextRequest) {
             }
           }
           if (usage) {
+            requestTokens = usage.prompt_tokens || 0
+            responseTokens = usage.completion_tokens || 0
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ usage })}\n\n`))
           }
+          
+          // Always record metrics, even if usage is not available
+          const duration = Date.now() - startTime
+          recordMetric(selectedModel, requestTokens, responseTokens, duration, 'stream', 'success')
+          
           controller.enqueue(encoder.encode('data: [DONE]\n\n'))
           controller.close()
         } catch (error: any) {
+          const duration = Date.now() - startTime
+          recordMetric(selectedModel, requestTokens, responseTokens, duration, 'stream', 'error')
           const status = getErrorStatus(error)
           const retryAfter = getRetryAfter(error)
           const errorMessage = getErrorMessage(error, 'Failed to stream AI response')
@@ -112,6 +129,9 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error: any) {
+    const duration = Date.now() - startTime
+    recordMetric(selectedModel, requestTokens, responseTokens, duration, 'stream', 'error')
+    
     console.error('Error in streaming chat API:', sanitizeErrorForLogging(error))
     
     const status = getErrorStatus(error)
