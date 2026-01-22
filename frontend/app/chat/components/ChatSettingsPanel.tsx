@@ -3,6 +3,7 @@ import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
 import Link from 'next/link'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { PromptTemplates } from './PromptTemplates'
 
 interface ChatSettingsPanelProps {
   useStreaming: boolean
@@ -16,6 +17,8 @@ interface ChatSettingsPanelProps {
   onSetSelectedModel: (model: string) => void
   onExportDialog?: () => void
   isExporting?: boolean
+  currentInput?: string
+  onSelectTemplate?: (content: string) => void
 }
 
 export function ChatSettingsPanel({
@@ -30,6 +33,8 @@ export function ChatSettingsPanel({
   onSetSelectedModel,
   onExportDialog,
   isExporting = false,
+  currentInput = '',
+  onSelectTemplate,
 }: ChatSettingsPanelProps) {
   const { t } = useLanguage()
   
@@ -162,6 +167,12 @@ export function ChatSettingsPanel({
           <AlertTriangle className="w-4 h-4" />
           {t('settings.errors')}
         </Link>
+        {onSelectTemplate && (
+          <PromptTemplates
+            onSelectTemplate={onSelectTemplate}
+            currentInput={currentInput}
+          />
+        )}
       </div>
     </div>
   )

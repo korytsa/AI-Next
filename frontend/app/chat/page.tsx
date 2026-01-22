@@ -54,6 +54,8 @@ export default function ChatPage() {
         selectedModel={selectedModel}
         onSetSelectedModel={handleSetSelectedModel}
         isExporting={isExporting}
+        currentInput={input}
+        onSelectTemplate={(content) => setInput(content)}
       />
       <MessagesList 
         messages={messages} 

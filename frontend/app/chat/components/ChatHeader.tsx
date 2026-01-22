@@ -23,9 +23,11 @@ interface ChatHeaderProps {
   selectedModel: string
   onSetSelectedModel: (model: string) => void
   isExporting?: boolean
+  currentInput?: string
+  onSelectTemplate?: (content: string) => void
 }
 
-export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, isExporting = false }: ChatHeaderProps) {
+export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, isExporting = false, currentInput = '', onSelectTemplate }: ChatHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(true)
   const { t } = useLanguage()
   
@@ -85,6 +87,8 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
           onSetSelectedModel={onSetSelectedModel}
           onExportDialog={onExportDialog}
           isExporting={isExporting}
+          currentInput={currentInput}
+          onSelectTemplate={onSelectTemplate}
         />
       )}
     </div>

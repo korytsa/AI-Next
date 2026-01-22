@@ -21,6 +21,14 @@ export const translations = {
       save: 'Save',
       changeName: 'Change name',
     },
+    templates: {
+      title: 'Templates',
+      save: 'Save as Template',
+      saveTemplate: 'Save Template',
+      namePlaceholder: 'Template name...',
+      delete: 'Delete',
+      noTemplates: 'No templates yet',
+    },
     settings: {
       title: 'Settings',
       model: 'Model',
@@ -121,6 +129,14 @@ export const translations = {
       charactersRemaining: 'символов осталось',
       save: 'Сохранить',
       changeName: 'Изменить имя',
+    },
+    templates: {
+      title: 'Шаблоны',
+      save: 'Сохранить как шаблон',
+      saveTemplate: 'Сохранить шаблон',
+      namePlaceholder: 'Название шаблона...',
+      delete: 'Удалить',
+      noTemplates: 'Шаблонов пока нет',
     },
     settings: {
       title: 'Настройки',
