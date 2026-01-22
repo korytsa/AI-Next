@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { AlertTriangle, RefreshCw, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { useLanguage } from '@/app/contexts/LanguageContext'
+import { LanguageSwitcher } from '@/app/components/LanguageSwitcher'
 
 interface ErrorEntry {
   id: string
@@ -30,6 +32,7 @@ interface ErrorData {
 }
 
 export default function ErrorsPage() {
+  const { t } = useLanguage()
   const [errorData, setErrorData] = useState<ErrorData | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -55,7 +58,7 @@ export default function ErrorsPage() {
   }, [fetchErrors])
 
   const handleClearErrors = async () => {
-    if (!confirm('Are you sure you want to clear all errors? This action cannot be undone.')) {
+    if (!confirm(t('errorsPage.clearConfirm'))) {
       return
     }
 
@@ -90,7 +93,7 @@ export default function ErrorsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-500">Loading errors...</p>
+          <p className="text-gray-500">{t('errorsPage.loading')}</p>
         </div>
       </div>
     )
@@ -110,7 +113,7 @@ export default function ErrorsPage() {
               </Link>
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
-                <h1 className="text-3xl font-bold">Error Tracking</h1>
+                <h1 className="text-3xl font-bold">{t('errorsPage.title')}</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -119,30 +122,31 @@ export default function ErrorsPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
-                Refresh
+                {t('errorsPage.refresh')}
               </button>
               <button
                 onClick={handleClearErrors}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                Clear
+                {t('errorsPage.clear')}
               </button>
+              <LanguageSwitcher />
             </div>
           </div>
 
           {errorData && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Errors</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('errorsPage.totalErrors')}</div>
                 <div className="text-2xl font-bold">{errorData.total}</div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Error Types</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('errorsPage.errorTypes')}</div>
                 <div className="text-2xl font-bold">{Object.keys(errorData.stats.byType).length}</div>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Endpoints</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('errorsPage.endpoints')}</div>
                 <div className="text-2xl font-bold">{Object.keys(errorData.stats.byEndpoint).length}</div>
               </div>
             </div>
@@ -186,7 +190,7 @@ export default function ErrorsPage() {
                 {error.stack && (
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
-                      Stack trace
+                      {t('errorsPage.stackTrace')}
                     </summary>
                     <pre className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded text-xs overflow-x-auto">
                       {error.stack}
@@ -197,7 +201,7 @@ export default function ErrorsPage() {
                 {error.context && Object.keys(error.context).length > 0 && (
                   <details className="mt-4">
                     <summary className="cursor-pointer text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
-                      Context
+                      {t('errorsPage.context')}
                     </summary>
                     <pre className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded text-xs overflow-x-auto">
                       {JSON.stringify(error.context, null, 2)}
@@ -211,10 +215,10 @@ export default function ErrorsPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center shadow">
             <AlertTriangle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              No errors found
+              {t('errorsPage.noErrors')}
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
-              All clear! No errors have been recorded.
+              {t('errorsPage.noErrorsDescription')}
             </p>
           </div>
         )}

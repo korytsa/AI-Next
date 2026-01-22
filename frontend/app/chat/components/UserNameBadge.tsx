@@ -1,5 +1,6 @@
 import { useState, useEffect, KeyboardEvent } from 'react'
 import { User, Edit2, Check, X } from 'lucide-react'
+import { useLanguage } from '@/app/contexts/LanguageContext'
 
 interface UserNameBadgeProps {
   userName?: string | null
@@ -7,6 +8,7 @@ interface UserNameBadgeProps {
 }
 
 export function UserNameBadge({ userName, onChangeName }: UserNameBadgeProps) {
+  const { t } = useLanguage()
   const [isEditingName, setIsEditingName] = useState(false)
   const [editedName, setEditedName] = useState(userName || 'user')
 
@@ -58,14 +60,14 @@ export function UserNameBadge({ userName, onChangeName }: UserNameBadgeProps) {
           <button
             onClick={handleSaveName}
             className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
-            title="Save"
+            title={t('chat.save')}
           >
             <Check className="w-3 h-3 text-blue-600 dark:text-blue-400" />
           </button>
           <button
             onClick={handleCancelEdit}
             className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
-            title="Cancel"
+            title={t('chat.cancel')}
           >
             <X className="w-3 h-3 text-blue-600 dark:text-blue-400" />
           </button>
@@ -77,7 +79,7 @@ export function UserNameBadge({ userName, onChangeName }: UserNameBadgeProps) {
             <button
               onClick={handleStartEdit}
               className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg"
-              title="Change name"
+              title={t('chat.changeName')}
             >
               <Edit2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
             </button>

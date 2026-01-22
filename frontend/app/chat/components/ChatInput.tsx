@@ -1,5 +1,6 @@
 import { Send, X } from 'lucide-react'
 import { forwardRef } from 'react'
+import { useLanguage } from '@/app/contexts/LanguageContext'
 
 const MAX_MESSAGE_LENGTH = 10000
 
@@ -13,6 +14,8 @@ interface ChatInputProps {
 
 export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ input, setInput, onSubmit, loading, onCancel }, ref) => {
+    const { t } = useLanguage()
+    
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value
       if (value.length <= MAX_MESSAGE_LENGTH) {
@@ -31,7 +34,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               ref={ref}
               value={input}
               onChange={handleInputChange}
-              placeholder="Enter a message..."
+              placeholder={t('chat.placeholder')}
               maxLength={MAX_MESSAGE_LENGTH}
               rows={3}
               className="flex-1 px-4 py-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 resize-none overflow-y-auto"
@@ -52,7 +55,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 className="px-6 py-2 bg-red-500 text-white rounded-2xl hover:bg-red-600 flex items-center gap-2"
               >
                 <X className="w-5 h-5" />
-                Cancel
+                {t('chat.cancel')}
               </button>
             ) : (
               <button
@@ -61,13 +64,13 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 className="px-6 py-2 bg-blue-500 text-white rounded-2xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Send className="w-5 h-5" />
-                Send
+                {t('chat.send')}
               </button>
             )}
           </div>
           {isNearLimit && (
             <p className={`text-xs text-right ${remainingChars < 0 ? 'text-red-500' : 'text-gray-500'}`}>
-              {remainingChars} characters remaining
+              {remainingChars} {t('chat.charactersRemaining')}
             </p>
           )}
         </div>

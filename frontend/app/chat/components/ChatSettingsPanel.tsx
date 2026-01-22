@@ -2,6 +2,7 @@ import { Download, BarChart3, AlertTriangle } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
 import Link from 'next/link'
+import { useLanguage } from '@/app/contexts/LanguageContext'
 
 interface ChatSettingsPanelProps {
   useStreaming: boolean
@@ -30,11 +31,13 @@ export function ChatSettingsPanel({
   onExportDialog,
   isExporting = false,
 }: ChatSettingsPanelProps) {
+  const { t } = useLanguage()
+  
   return (
     <div className="border-t px-4 py-3 bg-white dark:bg-gray-800">
       <div className="flex items-center gap-6 flex-wrap">
         <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-500 dark:text-gray-500">Model:</label>
+          <label className="text-xs text-gray-500 dark:text-gray-500">{t('settings.model')}:</label>
           <select
             value={selectedModel}
             onChange={(e) => onSetSelectedModel(e.target.value)}
@@ -49,7 +52,7 @@ export function ChatSettingsPanel({
           </select>
         </div>
         <div className="flex items-center gap-[0.2px]">
-          <span className="text-xs text-gray-500 dark:text-gray-500">Mode:</span>
+          <span className="text-xs text-gray-500 dark:text-gray-500">{t('settings.responseMode')}:</span>
           <button
             type="button"
             onClick={() => onSetResponseMode('short')}
@@ -60,7 +63,7 @@ export function ChatSettingsPanel({
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
-            Short
+            {t('settings.short')}
           </button>
           <button
             type="button"
@@ -72,11 +75,11 @@ export function ChatSettingsPanel({
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
-            Detailed
+            {t('settings.detailed')}
           </button>
         </div>
         <div className="flex items-center gap-[0.2px]">
-          <span className="text-xs text-gray-500 dark:text-gray-500">CoT:</span>
+          <span className="text-xs text-gray-500 dark:text-gray-500">{t('settings.chainOfThought')}:</span>
           <button
             type="button"
             onClick={() => onSetChainOfThought('none')}
@@ -87,7 +90,7 @@ export function ChatSettingsPanel({
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
-            None
+            {t('settings.none')}
           </button>
           <button
             type="button"
@@ -99,7 +102,7 @@ export function ChatSettingsPanel({
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
-            Short
+            {t('settings.basic')}
           </button>
           <button
             type="button"
@@ -111,11 +114,11 @@ export function ChatSettingsPanel({
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
             }`}
           >
-            Detailed
+            {t('settings.advanced')}
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 dark:text-gray-500">Streaming:</span>
+          <span className="text-xs text-gray-500 dark:text-gray-500">{t('settings.streaming')}:</span>
           <button
             type="button"
             onClick={onToggleStreaming}
@@ -137,27 +140,27 @@ export function ChatSettingsPanel({
             onClick={onExportDialog}
             disabled={loading || isExporting}
             className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            title={isExporting ? 'Exporting...' : 'Save as text'}
+            title={isExporting ? t('chat.loading') : t('chat.export')}
           >
             <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
-            {isExporting ? 'Exporting...' : 'Export'}
+            {isExporting ? t('chat.loading') : t('chat.export')}
           </button>
         )}
         <Link
           href="/metrics"
           className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-2"
-          title="View API metrics"
+          title={t('settings.metrics')}
         >
           <BarChart3 className="w-4 h-4" />
-          Metrics
+          {t('settings.metrics')}
         </Link>
         <Link
           href="/errors"
           className="px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
-          title="View error tracking"
+          title={t('settings.errors')}
         >
           <AlertTriangle className="w-4 h-4" />
-          Errors
+          {t('settings.errors')}
         </Link>
       </div>
     </div>

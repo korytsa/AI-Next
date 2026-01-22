@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm'
 import { Message } from '../types'
 import { RotateCcw } from 'lucide-react'
 import { sanitizeText } from '@/app/lib/sanitization'
+import { useLanguage } from '@/app/contexts/LanguageContext'
 
 interface MessageBubbleProps {
   message: Message
@@ -10,6 +11,7 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
+  const { t } = useLanguage()
   const hasError = !!message.error
   const isRetryable = message.error?.retryable
 
@@ -33,12 +35,12 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
                 </p>
                 {message.error.retryAfter && (
                   <p className="text-sm text-red-500 dark:text-red-500 mt-1">
-                    Retry after {message.error.retryAfter} seconds
+                    {t('chat.retryAfter')} {message.error.retryAfter} {t('chat.seconds')}
                   </p>
                 )}
                 {message.error && (message.error.type === 'validation_error' || message.error.type === 'moderation_error') && message.error.details && message.error.details.length > 0 && (
                   <div className="mt-2 space-y-1">
-                    <p className="text-xs text-red-500 dark:text-red-500 font-medium">Details:</p>
+                    <p className="text-xs text-red-500 dark:text-red-500 font-medium">{t('chat.details')}</p>
                     <ul className="text-xs text-red-600 dark:text-red-400 space-y-1 list-disc list-inside">
                       {message.error.details.map((detail: string, index: number) => (
                         <li key={index}>{detail}</li>
@@ -54,7 +56,7 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
                 className="mt-2 px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors flex items-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" />
-                Retry
+                {t('chat.retry')}
               </button>
             )}
           </div>
