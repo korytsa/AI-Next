@@ -3,11 +3,10 @@ export interface Message {
   content: string
 }
 
-export type TrimmingStrategy = 'last_n_messages' | 'last_n_tokens' | 'smart' | 'summarize' | 'none'
+export type TrimmingStrategy = 'last_n_tokens' | 'smart' | 'summarize' | 'none'
 
 export interface TrimmingOptions {
   strategy: TrimmingStrategy
-  maxMessages?: number
   maxTokens?: number
   keepSystemMessage?: boolean
   keepFirstMessages?: number
@@ -32,32 +31,14 @@ export function trimMessages(
     keepFirstMessages: 2,
   }
 ): Message[] {
-  if (options.strategy === 'none' || messages.length === 0) {
-    return messages
-  }
+  if (options.strategy === 'none' || messages.length === 0) return messages
 
   const systemMessages = messages.filter((msg) => msg.role === 'system')
   const nonSystemMessages = messages.filter((msg) => msg.role !== 'system')
 
-  if (options.strategy === 'last_n_messages') {
-    const maxMessages = options.maxMessages || 20
-    const trimmed = nonSystemMessages.slice(-maxMessages)
-
-    if (options.keepSystemMessage !== false && systemMessages.length > 0) {
-      return [...systemMessages, ...trimmed]
-    }
-
-    return trimmed
-  }
-
   if (options.strategy === 'last_n_tokens' || options.strategy === 'smart') {
     const maxTokens = options.maxTokens || 6000
-    const result: Message[] = []
-
-    if (options.keepSystemMessage !== false && systemMessages.length > 0) {
-      result.push(...systemMessages)
-    }
-
+    const result: Message[] = options.keepSystemMessage !== false && systemMessages.length > 0 ? [...systemMessages] : []
     let currentTokens = countTokens(result)
 
     if (options.strategy === 'smart' && options.keepFirstMessages && options.keepFirstMessages > 0) {
@@ -66,12 +47,9 @@ export function trimMessages(
       
       for (const msg of firstMessages) {
         const msgTokens = estimateTokens(msg.content)
-        if (currentTokens + msgTokens <= maxTokens) {
-          firstMessagesToKeep.push(msg)
-          currentTokens += msgTokens
-        } else {
-          break
-        }
+        if (currentTokens + msgTokens > maxTokens) break
+        firstMessagesToKeep.push(msg)
+        currentTokens += msgTokens
       }
 
       const remainingTokens = maxTokens - currentTokens
@@ -79,30 +57,20 @@ export function trimMessages(
       let lastTokens = 0
 
       for (let i = nonSystemMessages.length - 1; i >= firstMessagesToKeep.length; i--) {
-        const msg = nonSystemMessages[i]
-        const msgTokens = estimateTokens(msg.content)
-
-        if (lastTokens + msgTokens <= remainingTokens) {
-          lastMessagesToKeep.unshift(msg)
-          lastTokens += msgTokens
-        } else {
-          break
-        }
+        const msgTokens = estimateTokens(nonSystemMessages[i].content)
+        if (lastTokens + msgTokens > remainingTokens) break
+        lastMessagesToKeep.unshift(nonSystemMessages[i])
+        lastTokens += msgTokens
       }
 
       return [...result, ...firstMessagesToKeep, ...lastMessagesToKeep]
     }
 
     for (let i = nonSystemMessages.length - 1; i >= 0; i--) {
-      const msg = nonSystemMessages[i]
-      const msgTokens = estimateTokens(msg.content)
-
-      if (currentTokens + msgTokens <= maxTokens) {
-        result.unshift(msg)
-        currentTokens += msgTokens
-      } else {
-        break
-      }
+      const msgTokens = estimateTokens(nonSystemMessages[i].content)
+      if (currentTokens + msgTokens > maxTokens) break
+      result.unshift(nonSystemMessages[i])
+      currentTokens += msgTokens
     }
 
     return result
@@ -131,33 +99,21 @@ export async function trimAndSummarizeMessages(
   const systemMessages = messages.filter((msg) => msg.role === 'system')
   const nonSystemMessages = messages.filter((msg) => msg.role !== 'system')
   
-  if (nonSystemMessages.length === 0) {
-    return messages
-  }
+  if (nonSystemMessages.length === 0) return messages
 
   const maxTokens = options.maxTokens || 4000
   const summarizeThreshold = options.summarizeThreshold || 0.5
   const keepFirstMessages = options.keepFirstMessages || 2
 
-  const result: Message[] = []
-
-  if (options.keepSystemMessage !== false && systemMessages.length > 0) {
-    result.push(...systemMessages)
-  }
-
+  const result: Message[] = options.keepSystemMessage !== false && systemMessages.length > 0 ? [...systemMessages] : []
   let currentTokens = countTokens(result)
 
   const firstMessagesToKeep: Message[] = []
-  const firstMessages = nonSystemMessages.slice(0, keepFirstMessages)
-  
-  for (const msg of firstMessages) {
+  for (const msg of nonSystemMessages.slice(0, keepFirstMessages)) {
     const msgTokens = estimateTokens(msg.content)
-    if (currentTokens + msgTokens <= maxTokens) {
-      firstMessagesToKeep.push(msg)
-      currentTokens += msgTokens
-    } else {
-      break
-    }
+    if (currentTokens + msgTokens > maxTokens) break
+    firstMessagesToKeep.push(msg)
+    currentTokens += msgTokens
   }
 
   const remainingTokens = maxTokens - currentTokens
@@ -165,21 +121,12 @@ export async function trimAndSummarizeMessages(
   const lastMessagesToKeep: Message[] = []
   let lastTokens = 0
 
-  const startIndex = Math.max(
-    firstMessagesToKeep.length,
-    nonSystemMessages.length - maxLastMessages
-  )
-
+  const startIndex = Math.max(firstMessagesToKeep.length, nonSystemMessages.length - maxLastMessages)
   for (let i = nonSystemMessages.length - 1; i >= startIndex; i--) {
-    const msg = nonSystemMessages[i]
-    const msgTokens = estimateTokens(msg.content)
-
-    if (lastTokens + msgTokens <= remainingTokens) {
-      lastMessagesToKeep.unshift(msg)
-      lastTokens += msgTokens
-    } else {
-      break
-    }
+    const msgTokens = estimateTokens(nonSystemMessages[i].content)
+    if (lastTokens + msgTokens > remainingTokens) break
+    lastMessagesToKeep.unshift(nonSystemMessages[i])
+    lastTokens += msgTokens
   }
 
   const messagesToSummarize = nonSystemMessages.slice(
@@ -187,46 +134,27 @@ export async function trimAndSummarizeMessages(
     nonSystemMessages.length - lastMessagesToKeep.length
   )
 
-  if (messagesToSummarize.length > 0) {
-    const totalTokens = countTokens(messagesToSummarize)
-    const thresholdTokens = maxTokens * summarizeThreshold
-    const minMessagesToSummarize = 5
+  if (messagesToSummarize.length >= 5 && countTokens(messagesToSummarize) > maxTokens * summarizeThreshold) {
+    const summary = await summarizeMessages(messagesToSummarize, {
+      maxSummaryTokens: options.maxSummaryTokens || 200,
+      preserveKeyInfo: true,
+    })
 
-    if (messagesToSummarize.length >= minMessagesToSummarize && totalTokens > thresholdTokens) {
-      const summary = await summarizeMessages(messagesToSummarize, {
-        maxSummaryTokens: options.maxSummaryTokens || 200,
-        preserveKeyInfo: true,
-      })
-
-      const summaryMessage: Message = {
-        role: 'system',
-        content: `[Summary of previous conversation: ${summary}]`,
-      }
-
-      const summaryTokens = estimateTokens(summaryMessage.content)
-
-      if (currentTokens + summaryTokens + lastTokens <= maxTokens) {
-        result.push(...firstMessagesToKeep, summaryMessage, ...lastMessagesToKeep)
-      } else {
-        result.push(...firstMessagesToKeep, ...lastMessagesToKeep)
-      }
-    } else {
-      result.push(...firstMessagesToKeep, ...lastMessagesToKeep)
+    const summaryMessage: Message = {
+      role: 'system',
+      content: `[Summary of previous conversation: ${summary}]`,
     }
-  } else {
-    result.push(...firstMessagesToKeep, ...lastMessagesToKeep)
+
+    const summaryTokens = estimateTokens(summaryMessage.content)
+    if (currentTokens + summaryTokens + lastTokens <= maxTokens) {
+      return [...result, ...firstMessagesToKeep, summaryMessage, ...lastMessagesToKeep]
+    }
   }
 
-  return result
+  return [...result, ...firstMessagesToKeep, ...lastMessagesToKeep]
 }
 
-export function getMessagesInfo(messages: Message[]): {
-  totalMessages: number
-  estimatedTokens: number
-  systemMessages: number
-  userMessages: number
-  assistantMessages: number
-} {
+export function getMessagesInfo(messages: Message[]) {
   const systemMessages = messages.filter((msg) => msg.role === 'system')
   const userMessages = messages.filter((msg) => msg.role === 'user')
   const assistantMessages = messages.filter((msg) => msg.role === 'assistant')

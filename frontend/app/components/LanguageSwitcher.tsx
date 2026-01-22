@@ -1,7 +1,6 @@
 'use client'
 
 import { useLanguage } from '@/app/contexts/LanguageContext'
-import { Language } from '@/app/lib/translations'
 import { Globe } from 'lucide-react'
 
 export function LanguageSwitcher() {

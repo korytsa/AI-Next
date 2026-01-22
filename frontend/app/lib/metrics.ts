@@ -38,24 +38,13 @@ class MetricsStore {
   }
 
   getMetrics(period: 'today' | 'week' | 'month' | 'all' = 'today') {
-    const now = Date.now()
-    let cutoffTime = 0
-
-    switch (period) {
-      case 'today':
-        cutoffTime = now - 24 * 60 * 60 * 1000 
-        break
-      case 'week':
-        cutoffTime = now - 7 * 24 * 60 * 60 * 1000 
-        break
-      case 'month':
-        cutoffTime = now - 30 * 24 * 60 * 60 * 1000 
-        break
-      case 'all':
-        cutoffTime = 0
-        break
+    const periodDays: Record<string, number> = {
+      today: 1,
+      week: 7,
+      month: 30,
+      all: Infinity,
     }
-
+    const cutoffTime = period === 'all' ? 0 : Date.now() - periodDays[period] * 24 * 60 * 60 * 1000
     const filtered = this.entries.filter((e) => e.timestamp >= cutoffTime)
     const successful = filtered.filter((e) => e.status === 'success')
 
@@ -65,63 +54,40 @@ class MetricsStore {
     const totalResponseTokens = successful.reduce((sum, e) => sum + e.responseTokens, 0)
     const totalTokens = successful.reduce((sum, e) => sum + e.totalTokens, 0)
     const totalDuration = successful.reduce((sum, e) => sum + e.duration, 0)
-    const avgLatency = successful.length > 0 ? totalDuration / successful.length : 0
+    const avgLatency = successful.length > 0 ? Math.round(totalDuration / successful.length) : 0
 
-    let minLatency = 0
-    let maxLatency = 0
-    if (successful.length > 0) {
-      const durations = successful.map((e) => e.duration).filter((d) => d >= 0)
-      if (durations.length > 0) {
-        minLatency = durations.reduce((min, d) => Math.min(min, d), durations[0])
-        maxLatency = durations.reduce((max, d) => Math.max(max, d), durations[0])
-      }
-    }
+    const durations = successful.map((e) => e.duration).filter((d) => d >= 0)
+    const minLatency = durations.length > 0 ? Math.round(Math.min(...durations)) : 0
+    const maxLatency = durations.length > 0 ? Math.round(Math.max(...durations)) : 0
 
     const latencyByModel: Record<string, number> = {}
     const countByModel: Record<string, number> = {}
-
     successful.forEach((entry) => {
-      if (!latencyByModel[entry.model]) {
-        latencyByModel[entry.model] = 0
-        countByModel[entry.model] = 0
-      }
-      latencyByModel[entry.model] += entry.duration
-      countByModel[entry.model] += 1
+      latencyByModel[entry.model] = (latencyByModel[entry.model] || 0) + entry.duration
+      countByModel[entry.model] = (countByModel[entry.model] || 0) + 1
     })
-
     Object.keys(latencyByModel).forEach((model) => {
       latencyByModel[model] = Math.round(latencyByModel[model] / countByModel[model])
     })
 
     const tokensPerSecondByModel: Record<string, number> = {}
     const tpsCountByModel: Record<string, number> = {}
-    
     successful.forEach((entry) => {
       if (entry.duration > 0 && entry.totalTokens > 0) {
         const tps = (entry.totalTokens / entry.duration) * 1000
-        if (!tokensPerSecondByModel[entry.model]) {
-          tokensPerSecondByModel[entry.model] = 0
-          tpsCountByModel[entry.model] = 0
-        }
-        tokensPerSecondByModel[entry.model] += tps
-        tpsCountByModel[entry.model] += 1
+        tokensPerSecondByModel[entry.model] = (tokensPerSecondByModel[entry.model] || 0) + tps
+        tpsCountByModel[entry.model] = (tpsCountByModel[entry.model] || 0) + 1
       }
     })
-
     Object.keys(tokensPerSecondByModel).forEach((model) => {
-      if (tpsCountByModel[model] > 0) {
-        tokensPerSecondByModel[model] = parseFloat((tokensPerSecondByModel[model] / tpsCountByModel[model]).toFixed(2))
-      }
+      tokensPerSecondByModel[model] = parseFloat((tokensPerSecondByModel[model] / tpsCountByModel[model]).toFixed(2))
     })
 
     let totalCost = 0
     const byModel: Record<string, { requests: number; tokens: number; cost: number }> = {}
-
     successful.forEach((entry) => {
       const pricing = MODEL_PRICING[entry.model] || MODEL_PRICING['llama-3.1-8b-instant']
-      const inputCost = (entry.requestTokens / 1_000_000) * pricing.input
-      const outputCost = (entry.responseTokens / 1_000_000) * pricing.output
-      const entryCost = inputCost + outputCost
+      const entryCost = (entry.requestTokens / 1_000_000) * pricing.input + (entry.responseTokens / 1_000_000) * pricing.output
       totalCost += entryCost
 
       if (!byModel[entry.model]) {
@@ -146,11 +112,11 @@ class MetricsStore {
       totalResponseTokens,
       totalTokens,
       totalCost: parseFloat(totalCost.toFixed(6)),
-      avgLatency: Math.round(avgLatency),
-      minLatency: Math.round(minLatency),
-      maxLatency: Math.round(maxLatency),
-      latencyByModel: latencyByModel || {},
-      tokensPerSecondByModel: tokensPerSecondByModel || {},
+      avgLatency,
+      minLatency,
+      maxLatency,
+      latencyByModel,
+      tokensPerSecondByModel,
       byModel,
       byEndpoint,
     }

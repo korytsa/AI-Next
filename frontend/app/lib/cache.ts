@@ -14,28 +14,13 @@ class ResponseCache {
     responseMode?: string,
     chainOfThought?: string
   ): string {
-    const lastUserMessage = messages
-      .filter((m) => m.role === 'user')
-      .slice(-1)[0]?.content || ''
-
-    const context = {
+    const lastUserMessage = messages.findLast((m) => m.role === 'user')?.content || ''
+    return JSON.stringify({
       message: lastUserMessage.toLowerCase().trim(),
       userName: userName || '',
       responseMode: responseMode || 'detailed',
       chainOfThought: chainOfThought || 'none',
-    }
-
-    return JSON.stringify(context)
-  }
-
-  private hashKey(key: string): string {
-    let hash = 0
-    for (let i = 0; i < key.length; i++) {
-      const char = key.charCodeAt(i)
-      hash = (hash << 5) - hash + char
-      hash = hash & hash
-    }
-    return hash.toString(36)
+    })
   }
 
   get(
@@ -45,15 +30,10 @@ class ResponseCache {
     chainOfThought?: string
   ): any | null {
     const key = this.generateKey(messages, userName, responseMode, chainOfThought)
-    const hash = this.hashKey(key)
-    const entry = this.cache.get(hash)
+    const entry = this.cache.get(key)
 
-    if (!entry) {
-      return null
-    }
-
-    if (Date.now() > entry.expiresAt) {
-      this.cache.delete(hash)
+    if (!entry || Date.now() > entry.expiresAt) {
+      if (entry) this.cache.delete(key)
       return null
     }
 
@@ -69,10 +49,8 @@ class ResponseCache {
     ttl?: number
   ): void {
     const key = this.generateKey(messages, userName, responseMode, chainOfThought)
-    const hash = this.hashKey(key)
     const now = Date.now()
-
-    this.cache.set(hash, {
+    this.cache.set(key, {
       response,
       timestamp: now,
       expiresAt: now + (ttl || this.defaultTTL),
@@ -96,20 +74,15 @@ class ResponseCache {
     }
   }
 
-  getStats(): {
-    size: number
-    entries: Array<{ key: string; age: number; expiresIn: number }>
-  } {
+  getStats() {
     const now = Date.now()
-    const entries = Array.from(this.cache.entries()).map(([key, entry]) => ({
-      key,
-      age: now - entry.timestamp,
-      expiresIn: entry.expiresAt - now,
-    }))
-
     return {
       size: this.cache.size,
-      entries,
+      entries: Array.from(this.cache.entries()).map(([key, entry]) => ({
+        key,
+        age: now - entry.timestamp,
+        expiresIn: entry.expiresAt - now,
+      })),
     }
   }
 }

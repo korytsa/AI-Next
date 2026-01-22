@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { Language, translations } from '@/app/lib/translations'
+import { getFromStorage, saveToStorage } from '@/app/lib/storage'
 
 interface LanguageContextType {
   language: Language
@@ -15,8 +16,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en')
 
   useEffect(() => {
-    const saved = localStorage.getItem('language') as Language
-    if (saved && (saved === 'en' || saved === 'ru')) {
+    const isValidLanguage = (value: string): value is Language => value === 'en' || value === 'ru'
+    const saved = getFromStorage('language', 'en' as Language, isValidLanguage)
+    
+    if (saved === 'en' || saved === 'ru') {
       setLanguageState(saved)
     } else {
       const browserLang = navigator.language.split('-')[0]
@@ -26,7 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
-    localStorage.setItem('language', lang)
+    saveToStorage('language', lang)
   }
 
   const t = (key: string): string => {

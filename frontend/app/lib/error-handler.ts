@@ -9,13 +9,11 @@ export interface ChatError {
 export function parseError(error: any, response?: Response): ChatError {
   if (response?.status === 429) {
     const retryAfter = response.headers.get('retry-after')
-    const retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : undefined
-
     return {
       message: 'Too many requests. Please wait a moment and try again.',
       type: 'rate_limit',
       retryable: true,
-      retryAfter: retryAfterSeconds,
+      retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined,
     }
   }
 
@@ -36,22 +34,12 @@ export function parseError(error: any, response?: Response): ChatError {
   }
 
   if (response.status >= 400) {
-    if (error.type === 'validation_error' || error.type === 'moderation_error') {
-      const errorMessage = error.error || error.message || 'Your request contains invalid content'
-      return {
-        message: errorMessage,
-        type: error.type,
-        retryable: false,
-        details: error.details || [],
-      }
-    }
-
-    const errorMessage = error.error || error.message || 'Invalid request. Please check your input.'
+    const isValidationError = error.type === 'validation_error' || error.type === 'moderation_error'
     return {
-      message: errorMessage,
-      type: 'server',
+      message: error.error || error.message || (isValidationError ? 'Your request contains invalid content' : 'Invalid request. Please check your input.'),
+      type: isValidationError ? error.type : 'server',
       retryable: false,
-      details: error.details,
+      details: error.details || [],
     }
   }
 
@@ -63,8 +51,7 @@ export function parseError(error: any, response?: Response): ChatError {
 }
 
 export function getErrorMessage(error: ChatError): string {
-  if (error.type === 'rate_limit' && error.retryAfter) {
-    return `${error.message} (Retry after ${error.retryAfter} seconds)`
-  }
-  return error.message
+  return error.type === 'rate_limit' && error.retryAfter
+    ? `${error.message} (Retry after ${error.retryAfter} seconds)`
+    : error.message
 }

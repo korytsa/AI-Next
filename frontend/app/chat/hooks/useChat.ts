@@ -3,17 +3,15 @@ import { Message } from '../types'
 import { useMessages } from './useMessages'
 import { useUserSettings } from './useUserSettings'
 import { useChatApi } from './useChatApi'
-import { useExportWorker } from './useExportWorker'
-import { exportMessages, getFileExtension, getMimeType, ExportFormat } from '@/app/lib/export-formats'
+import { useExport } from './useExport'
 import { sanitizeText } from '@/app/lib/sanitization'
-import { parseChatError, createErrorMessage } from './useChatApiHelpers'
+import { parseChatError, createErrorMessage } from './chatApiUtils'
 
 export type { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
 
 export function useChat() {
   const [input, setInput] = useState('')
   const [useStreaming, setUseStreaming] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -61,6 +59,8 @@ export function useChat() {
     scrollToBottom,
   })
 
+  const { exportDialog, isExporting } = useExport(allMessages)
+
   useEffect(() => {
     if (!loading && inputRef.current && displayedMessages.length > 1) {
       setTimeout(() => {
@@ -99,43 +99,10 @@ export function useChat() {
     }
   }
 
-  const retryLastMessage = async () => {
-    await retryLastMessageApi(useStreaming)
-  }
 
-  const clearHistory = () => {
-    clearMessagesHistory()
-  }
+  const clearHistory = () => clearMessagesHistory()
 
-  const exportDialog = async (format: ExportFormat = 'txt') => {
-    if (allMessages.length === 0) return
-
-    try {
-      setIsExporting(true)
-
-      if (format === 'pdf') {
-        exportMessages(allMessages, format)
-        return
-      }
-
-      const exportedContent = exportMessages(allMessages, format)
-      if (!exportedContent) return
-
-      const blob = new Blob([exportedContent], { type: getMimeType(format) })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `chat-export-${new Date().toISOString().split('T')[0]}.${getFileExtension(format)}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Failed to export messages:', error)
-    } finally {
-      setIsExporting(false)
-    }
-  }
+  const retryLastMessage = () => retryLastMessageApi(useStreaming)
 
   return {
     messages: displayedMessages,

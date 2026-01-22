@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react'
 import { Message } from '../types'
-import { ChatError } from '@/app/lib/error-handler'
 import { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
-import { parseChatError, createErrorMessage } from './useChatApiHelpers'
+import { parseChatError, createErrorMessage } from './chatApiUtils'
+import { handleStreamingSubmit } from './streamingHandler'
+import { handleRegularSubmit } from './regularHandler'
 
 interface UseChatApiProps {
   allMessages: Message[]
@@ -30,203 +31,37 @@ export function useChatApi({
   const streamingContentRef = useRef<string>('')
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  const handleStreamingSubmit = async (messagesToSend: Message[], retryCount = 0): Promise<void> => {
-    const MAX_RETRIES = 3
-    const assistantMessage: Message = { role: 'assistant', content: '' }
-    
-    addMessage(assistantMessage)
-    streamingContentRef.current = ''
-
-    abortControllerRef.current = new AbortController()
-
-    try {
-      const response = await fetch('/api/chat/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: messagesToSend.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          userName: userName,
-          responseMode: responseMode,
-          chainOfThought: chainOfThought,
-          model: selectedModel,
-        }),
-        signal: abortControllerRef.current.signal,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        const chatError = parseChatError(errorData)
-        
-        if (chatError.type === 'validation_error' || chatError.type === 'moderation_error') {
-          throw chatError
-        }
-        
-        if (chatError.retryable && retryCount < MAX_RETRIES) {
-          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000)
-          await new Promise(resolve => setTimeout(resolve, delay))
-          return handleStreamingSubmit(messagesToSend, retryCount + 1)
-        }
-        
-        throw chatError
-      }
-
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-
-      if (!reader) {
-        throw new Error('No reader available')
-      }
-
-      let buffer = ''
-
-      try {
-        while (true) {
-          if (abortControllerRef.current?.signal.aborted) {
-            reader.cancel()
-            break
-          }
-
-          const { done, value } = await reader.read()
-          if (done) break
-
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6)
-              if (data === '[DONE]') {
-                setLoading(false)
-                continue
-              }
-
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.error) {
-                  const chatError = parseChatError(parsed.error)
-                  updateLastMessage((prev) => createErrorMessage(prev, chatError))
-                  setLoading(false)
-                  return
-                }
-                
-                if (parsed.usage) {
-                  setTotalTokens((prev) => prev + (parsed.usage.total_tokens || 0))
-                }
-                
-                if (parsed.content) {
-                  streamingContentRef.current += parsed.content
-                  updateLastMessage((prev) => ({
-                    ...prev,
-                    content: streamingContentRef.current,
-                  }))
-                  scrollToBottom()
-                }
-              } catch (e) {
-              }
-            }
-          }
-        }
-      } catch (readError) {
-        if ((readError as any).name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
-          reader.cancel()
-        } else {
-          throw readError
-        }
-      } finally {
-        if (abortControllerRef.current?.signal.aborted) {
-          updateLastMessage((prev) => ({
-            ...prev,
-            content: prev.content || streamingContentRef.current || '[Request cancelled]',
-          }))
-        }
-      }
-
-      setLoading(false)
-      abortControllerRef.current = null
-    } catch (error: any) {
-      if (error.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
-        updateLastMessage((prev) => ({
-          ...prev,
-          content: prev.content || '[Request cancelled]',
-        }))
-        setLoading(false)
-        abortControllerRef.current = null
-        return
-      }
-
-      const chatError = parseChatError(error)
-      updateLastMessage((prev) => createErrorMessage(prev, chatError))
-      setLoading(false)
-      abortControllerRef.current = null
-      throw chatError
-    }
+  const streamingProps = {
+    userName,
+    responseMode,
+    chainOfThought,
+    selectedModel,
+    addMessage,
+    updateLastMessage,
+    setTotalTokens,
+    setLoading,
+    scrollToBottom,
+    streamingContentRef,
+    abortControllerRef,
   }
 
-  const handleRegularSubmit = async (messagesToSend: Message[], retryCount = 0): Promise<void> => {
-    const MAX_RETRIES = 3
+  const regularProps = {
+    userName,
+    responseMode,
+    chainOfThought,
+    selectedModel,
+    addMessage,
+    setTotalTokens,
+    setLoading,
+    abortControllerRef,
+  }
 
-    abortControllerRef.current = new AbortController()
+  const handleStreaming = async (messagesToSend: Message[], retryCount = 0) => {
+    return handleStreamingSubmit(messagesToSend, retryCount, streamingProps)
+  }
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: messagesToSend.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          userName: userName,
-          responseMode: responseMode,
-          chainOfThought: chainOfThought,
-          model: selectedModel,
-        }),
-        signal: abortControllerRef.current.signal,
-      })
-
-      const data = await response.json().catch(() => ({}))
-
-      if (!response.ok) {
-        const chatError = parseChatError(data)
-        
-        if (chatError.type === 'validation_error' || chatError.type === 'moderation_error') {
-          throw chatError
-        }
-        
-        if (chatError.retryable && retryCount < MAX_RETRIES) {
-          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000)
-          await new Promise(resolve => setTimeout(resolve, delay))
-          return handleRegularSubmit(messagesToSend, retryCount + 1)
-        }
-        
-        throw chatError
-      }
-
-      const assistantMessage: Message = { role: 'assistant', content: data.message }
-      addMessage(assistantMessage)
-      
-      if (data.usage) {
-        setTotalTokens((prev) => prev + (data.usage.total_tokens || 0))
-      }
-      
-      setLoading(false)
-      abortControllerRef.current = null
-    } catch (error: any) {
-      if (error.name === 'AbortError' || abortControllerRef.current?.signal.aborted) {
-        setLoading(false)
-        abortControllerRef.current = null
-        return
-      }
-
-      const chatError = parseChatError(error)
-      setLoading(false)
-      abortControllerRef.current = null
-      throw chatError
-    }
+  const handleRegular = async (messagesToSend: Message[], retryCount = 0) => {
+    return handleRegularSubmit(messagesToSend, retryCount, regularProps)
   }
 
   const cancelRequest = () => {
@@ -247,9 +82,9 @@ export function useChatApi({
         
         try {
           if (useStreaming) {
-            await handleStreamingSubmit(messagesToRetry)
+            await handleStreaming(messagesToRetry)
           } else {
-            await handleRegularSubmit(messagesToRetry)
+            await handleRegular(messagesToRetry)
           }
         } catch (error: any) {
           const chatError = parseChatError(error)
@@ -265,8 +100,8 @@ export function useChatApi({
     loading,
     setLoading,
     totalTokens,
-    handleStreamingSubmit,
-    handleRegularSubmit,
+    handleStreamingSubmit: handleStreaming,
+    handleRegularSubmit: handleRegular,
     retryLastMessage,
     cancelRequest,
   }

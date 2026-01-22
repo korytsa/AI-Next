@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Message } from '../types'
+import { getJsonFromStorage, saveJsonToStorage, removeFromStorage } from '@/app/lib/storage'
 
 const STORAGE_KEY = 'ai-chat-history'
 const INITIAL_MESSAGES_TO_LOAD = 20
@@ -10,35 +11,6 @@ const DEFAULT_MESSAGE: Message = {
   content: 'Hello! I am an AI assistant. How can I help you?',
 }
 
-const loadMessagesFromStorage = (): Message[] | null => {
-  if (typeof window === 'undefined') {
-    return null
-  }
-
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed
-      }
-    }
-  } catch (error) {
-    console.error('Failed to load messages from localStorage:', error)
-  }
-
-  return null
-}
-
-const saveMessagesToStorage = (messages: Message[]) => {
-  if (typeof window === 'undefined') return
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-  } catch (error) {
-    console.error('Failed to save messages to localStorage:', error)
-  }
-}
 
 export function useMessages() {
   const [allMessages, setAllMessages] = useState<Message[]>([DEFAULT_MESSAGE])
@@ -54,11 +26,10 @@ export function useMessages() {
     if (messages.length <= INITIAL_MESSAGES_TO_LOAD) {
       setDisplayedMessages(messages)
       setHasMoreMessages(false)
-    } else {
-      const lastMessages = messages.slice(-INITIAL_MESSAGES_TO_LOAD)
-      setDisplayedMessages(lastMessages)
-      setHasMoreMessages(true)
+      return
     }
+    setDisplayedMessages(messages.slice(-INITIAL_MESSAGES_TO_LOAD))
+    setHasMoreMessages(true)
   }
 
   const loadMoreMessages = () => {
@@ -83,11 +54,9 @@ export function useMessages() {
 
   const updateLastMessage = (updater: (prev: Message) => Message): Message => {
     const updateMessages = (prev: Message[]) => {
+      if (prev.length === 0) return prev
       const newMessages = [...prev]
-      const lastIndex = newMessages.length - 1
-      if (lastIndex >= 0) {
-        newMessages[lastIndex] = updater(newMessages[lastIndex])
-      }
+      newMessages[newMessages.length - 1] = updater(newMessages[newMessages.length - 1])
       return newMessages
     }
     setAllMessages(updateMessages)
@@ -101,9 +70,7 @@ export function useMessages() {
     setAllMessages([DEFAULT_MESSAGE])
     setDisplayedMessages([DEFAULT_MESSAGE])
     setHasMoreMessages(false)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY)
-    }
+    removeFromStorage(STORAGE_KEY)
   }
 
   const scrollToBottom = () => {
@@ -111,30 +78,28 @@ export function useMessages() {
   }
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && !isHydrated.current) {
-      const loadedMessages = loadMessagesFromStorage()
-      if (loadedMessages) {
-        setAllMessages(loadedMessages)
-        loadInitialMessages(loadedMessages)
-      }
-      isHydrated.current = true
+    if (typeof window === 'undefined' || isHydrated.current) return
+
+    const loadedMessages = getJsonFromStorage<Message[]>(STORAGE_KEY, [])
+    if (Array.isArray(loadedMessages) && loadedMessages.length > 0) {
+      setAllMessages(loadedMessages)
+      loadInitialMessages(loadedMessages)
     }
+    isHydrated.current = true
   }, [])
 
   useEffect(() => {
-    if (!isHydrated.current) return
-    
-    if (isInitialLoad.current) {
+    if (!isHydrated.current || isInitialLoad.current) {
       isInitialLoad.current = false
       return
     }
     
-    saveMessagesToStorage(allMessages)
+    saveJsonToStorage(STORAGE_KEY, allMessages)
     loadInitialMessages(allMessages)
   }, [allMessages])
 
   useEffect(() => {
-    if (displayedMessages.length > 0 && displayedMessages[displayedMessages.length - 1].role === 'assistant') {
+    if (displayedMessages[displayedMessages.length - 1]?.role === 'assistant') {
       scrollToBottom()
     }
   }, [displayedMessages])

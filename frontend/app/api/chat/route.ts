@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateMessages as validateMessagesFormat, createChatCompletion } from '@/app/lib/chat-utils'
-import { getErrorStatus, getRetryAfter, getErrorMessage } from '@/app/lib/api-utils'
 import { enhanceMessagesWithFunctions } from '@/app/lib/request-detectors'
 import { responseCache } from '@/app/lib/cache'
 import { checkThrottle } from '@/app/lib/throttle-utils'
@@ -8,7 +7,7 @@ import { validateAndModerateRequest } from '@/app/lib/request-validation'
 import { sanitizeErrorForLogging } from '@/app/lib/api-key-security'
 import { recordMetric } from '@/app/lib/metrics'
 import { DEFAULT_MODEL_ID } from '@/app/lib/models'
-import { trackError } from '@/app/lib/error-tracker'
+import { recordApiError, createErrorResponseData } from '@/app/lib/api-error-handler'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -58,7 +57,6 @@ export async function POST(req: NextRequest) {
         usage: completion.usage,
       }
 
-      // Record metrics
       requestTokens = completion.usage?.prompt_tokens || 0
       responseTokens = completion.usage?.completion_tokens || 0
       const duration = Date.now() - startTime
@@ -76,36 +74,24 @@ export async function POST(req: NextRequest) {
     
     throw new Error('Unexpected response type')
   } catch (error: any) {
-    const duration = Date.now() - startTime
-    recordMetric(selectedModel, requestTokens, responseTokens, duration, 'chat', 'error')
-    
-    const errorStatus = getErrorStatus(error)
-    
-    trackError(error, {
+    const status = recordApiError({
+      error,
       endpoint: '/api/chat',
-      method: 'POST',
-      statusCode: errorStatus,
-      model: selectedModel,
+      selectedModel,
       requestTokens,
       responseTokens,
+      startTime,
+      endpointType: 'chat',
     })
     
     console.error('Error in chat API:', sanitizeErrorForLogging(error))
     
-    const retryAfter = getRetryAfter(error)
-    const errorMessage = getErrorMessage(error)
-    
+    const { errorData, retryAfter } = createErrorResponseData(error, status)
     const headers: Record<string, string> = {}
     if (retryAfter) {
       headers['retry-after'] = retryAfter.toString()
     }
     
-    return NextResponse.json(
-      { 
-        error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined
-      },
-      { status: errorStatus, headers }
-    )
+    return NextResponse.json(errorData, { status, headers })
   }
 }

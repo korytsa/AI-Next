@@ -99,37 +99,19 @@ const DANGEROUS_SPECIAL_CHARS = [
 ]
 
 function checkInjectionPatterns(text: string): string[] {
-  const errors: string[] = []
-  
-  for (const item of INJECTION_PATTERNS) {
-    if (item.pattern.test(text)) {
-      errors.push(item.message)
-    }
-  }
-  
-  return errors
+  return INJECTION_PATTERNS.filter((item) => item.pattern.test(text)).map((item) => item.message)
 }
 
 function checkSpecialCharacters(text: string): string[] {
-  const warnings: string[] = []
-  
-  for (const char of DANGEROUS_SPECIAL_CHARS) {
-    if (text.includes(char)) {
-      warnings.push('Potentially unsafe characters detected in your message')
-    }
-  }
-  
-  return warnings
+  return DANGEROUS_SPECIAL_CHARS.some((char) => text.includes(char))
+    ? ['Potentially unsafe characters detected in your message']
+    : []
 }
 
 function checkLength(text: string, maxLength: number): string[] {
-  const errors: string[] = []
-  
-  if (text.length > maxLength) {
-    errors.push(`Your message is too long. Maximum length is ${maxLength.toLocaleString()} characters.`)
-  }
-  
-  return errors
+  return text.length > maxLength
+    ? [`Your message is too long. Maximum length is ${maxLength.toLocaleString()} characters.`]
+    : []
 }
 
 export function validatePrompt(
@@ -143,44 +125,23 @@ export function validatePrompt(
     checkLength: shouldCheckLength = true,
   } = options
 
-  const errors: string[] = []
-  const warnings: string[] = []
-
   if (!prompt || typeof prompt !== 'string') {
-    return {
-      isValid: false,
-      errors: ['Please enter a message'],
-      warnings: [],
-    }
+    return { isValid: false, errors: ['Please enter a message'], warnings: [] }
   }
 
   const trimmedPrompt = prompt.trim()
-
   if (trimmedPrompt.length === 0) {
-    return {
-      isValid: false,
-      errors: ['Please enter a message'],
-      warnings: [],
-    }
+    return { isValid: false, errors: ['Please enter a message'], warnings: [] }
   }
 
-  if (shouldCheckLength) {
-    errors.push(...checkLength(trimmedPrompt, maxLength))
-  }
+  const errors: string[] = []
+  if (shouldCheckLength) errors.push(...checkLength(trimmedPrompt, maxLength))
+  if (checkInjection) errors.push(...checkInjectionPatterns(trimmedPrompt))
 
-  if (checkInjection) {
-    errors.push(...checkInjectionPatterns(trimmedPrompt))
-  }
+  const warnings: string[] = []
+  if (checkSpecialChars) warnings.push(...checkSpecialCharacters(trimmedPrompt))
 
-  if (checkSpecialChars) {
-    warnings.push(...checkSpecialCharacters(trimmedPrompt))
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-  }
+  return { isValid: errors.length === 0, errors, warnings }
 }
 
 export function validateMessages(
@@ -188,19 +149,13 @@ export function validateMessages(
   options: ValidationOptions = {}
 ): ValidationResult {
   if (!Array.isArray(messages)) {
-    return {
-      isValid: false,
-      errors: ['Invalid message format'],
-      warnings: [],
-    }
+    return { isValid: false, errors: ['Invalid message format'], warnings: [] }
   }
 
   const allErrors: string[] = []
   const allWarnings: string[] = []
 
-  for (let i = 0; i < messages.length; i++) {
-    const message = messages[i]
-    
+  for (const message of messages) {
     if (!message || typeof message !== 'object') {
       allErrors.push('Invalid message format')
       continue
@@ -208,29 +163,17 @@ export function validateMessages(
 
     if (message.role === 'user' && message.content) {
       const result = validatePrompt(message.content, options)
-      
-      if (!result.isValid) {
-        allErrors.push(...result.errors)
-      }
-      
+      if (!result.isValid) allErrors.push(...result.errors)
       allWarnings.push(...result.warnings)
     }
   }
 
-  return {
-    isValid: allErrors.length === 0,
-    errors: allErrors,
-    warnings: allWarnings,
-  }
+  return { isValid: allErrors.length === 0, errors: allErrors, warnings: allWarnings }
 }
 
 export function sanitizePrompt(prompt: string): string {
-  let sanitized = prompt
-
-  for (const item of INJECTION_PATTERNS) {
-    sanitized = sanitized.replace(item.pattern, '')
-  }
-
+  let sanitized = INJECTION_PATTERNS.reduce((text, item) => text.replace(item.pattern, ''), prompt)
+  
   for (const char of DANGEROUS_SPECIAL_CHARS) {
     sanitized = sanitized.replace(new RegExp(char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '')
   }

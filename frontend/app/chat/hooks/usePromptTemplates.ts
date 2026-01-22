@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getJsonFromStorage, saveJsonToStorage } from '@/app/lib/storage'
 
 export interface PromptTemplate {
   id: string
@@ -14,13 +15,9 @@ export function usePromptTemplates() {
   const [templates, setTemplates] = useState<PromptTemplate[]>([])
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        setTemplates(JSON.parse(stored))
-      } catch {
-        setTemplates([])
-      }
+    const stored = getJsonFromStorage<PromptTemplate[]>(STORAGE_KEY, [])
+    if (Array.isArray(stored) && stored.length > 0) {
+      setTemplates(stored)
     }
   }, [])
 
@@ -36,7 +33,7 @@ export function usePromptTemplates() {
 
     setTemplates((prev) => {
       const updated = [newTemplate, ...prev].slice(0, MAX_TEMPLATES)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      saveJsonToStorage(STORAGE_KEY, updated)
       return updated
     })
 
@@ -46,7 +43,7 @@ export function usePromptTemplates() {
   const deleteTemplate = (id: string) => {
     setTemplates((prev) => {
       const updated = prev.filter((t) => t.id !== id)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      saveJsonToStorage(STORAGE_KEY, updated)
       return updated
     })
   }
