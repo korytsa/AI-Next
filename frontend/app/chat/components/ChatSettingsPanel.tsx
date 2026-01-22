@@ -1,4 +1,4 @@
-import { Download, BarChart3, AlertTriangle, Search } from 'lucide-react'
+import { Download, BarChart3, AlertTriangle } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
 import Link from 'next/link'
@@ -19,8 +19,6 @@ interface ChatSettingsPanelProps {
   isExporting?: boolean
   currentInput?: string
   onSelectTemplate?: (content: string) => void
-  searchQuery?: string
-  onSetSearchQuery?: (query: string) => void
 }
 
 export function ChatSettingsPanel({
@@ -37,8 +35,6 @@ export function ChatSettingsPanel({
   isExporting = false,
   currentInput = '',
   onSelectTemplate,
-  searchQuery = '',
-  onSetSearchQuery,
 }: ChatSettingsPanelProps) {
   const { t } = useLanguage()
   
@@ -176,21 +172,6 @@ export function ChatSettingsPanel({
             onSelectTemplate={onSelectTemplate}
             currentInput={currentInput}
           />
-        )}
-        {onSetSearchQuery && (
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-500 dark:text-gray-500">{t('settings.searchHistory')}:</label>
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => onSetSearchQuery(e.target.value)}
-                placeholder={t('settings.searchPlaceholder')}
-                className="pl-8 pr-3 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
         )}
       </div>
     </div>

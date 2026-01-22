@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Trash2, ChevronDown, ChevronUp, Search } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { useState } from 'react'
 import { UserNameBadge } from './UserNameBadge'
@@ -51,6 +51,18 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
               </span>
             </div>
           )}
+          {onSetSearchQuery && (
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSetSearchQuery(e.target.value)}
+                placeholder={t('settings.searchPlaceholder')}
+                className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
           <button
             type="button"
             onClick={onClearHistory}
@@ -91,8 +103,6 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
           isExporting={isExporting}
           currentInput={currentInput}
           onSelectTemplate={onSelectTemplate}
-          searchQuery={searchQuery}
-          onSetSearchQuery={onSetSearchQuery}
         />
       )}
     </div>
