@@ -34,6 +34,8 @@ export default function ChatPage() {
     messagesStartRef,
     isExporting,
     cancelRequest,
+    searchQuery,
+    setSearchQuery,
   } = useChat()
 
   return (
@@ -56,6 +58,8 @@ export default function ChatPage() {
         isExporting={isExporting}
         currentInput={input}
         onSelectTemplate={(content) => setInput(content)}
+        searchQuery={searchQuery}
+        onSetSearchQuery={setSearchQuery}
       />
       <MessagesList 
         messages={messages} 
@@ -66,6 +70,7 @@ export default function ChatPage() {
         onLoadMore={loadMoreMessages}
         hasMoreMessages={hasMoreMessages}
         isLoadingMore={isLoadingMore}
+        searchQuery={searchQuery}
       />
       <ChatInput ref={inputRef} input={input} setInput={setInput} onSubmit={handleSubmit} loading={loading} onCancel={cancelRequest} />
     </div>

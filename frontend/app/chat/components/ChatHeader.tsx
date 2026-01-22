@@ -25,9 +25,11 @@ interface ChatHeaderProps {
   isExporting?: boolean
   currentInput?: string
   onSelectTemplate?: (content: string) => void
+  searchQuery?: string
+  onSetSearchQuery?: (query: string) => void
 }
 
-export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, isExporting = false, currentInput = '', onSelectTemplate }: ChatHeaderProps) {
+export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(true)
   const { t } = useLanguage()
   
@@ -89,6 +91,8 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
           isExporting={isExporting}
           currentInput={currentInput}
           onSelectTemplate={onSelectTemplate}
+          searchQuery={searchQuery}
+          onSetSearchQuery={onSetSearchQuery}
         />
       )}
     </div>

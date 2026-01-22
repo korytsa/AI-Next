@@ -13,6 +13,7 @@ interface MessagesListProps {
   onLoadMore?: () => void
   hasMoreMessages?: boolean
   isLoadingMore?: boolean
+  searchQuery?: string
 }
 
 export function MessagesList({ 
@@ -24,6 +25,7 @@ export function MessagesList({
   onLoadMore,
   hasMoreMessages = false,
   isLoadingMore = false,
+  searchQuery = '',
 }: MessagesListProps) {
   const { t } = useLanguage()
   
@@ -47,6 +49,7 @@ export function MessagesList({
           key={idx} 
           message={message} 
           onRetry={message.error?.retryable ? onRetry : undefined}
+          searchQuery={searchQuery}
         />
       ))}
       {loading && <LoadingIndicator />}

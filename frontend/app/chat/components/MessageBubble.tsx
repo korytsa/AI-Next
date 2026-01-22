@@ -2,18 +2,42 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Message } from '../types'
 import { RotateCcw } from 'lucide-react'
-import { sanitizeText } from '@/app/lib/sanitization'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import React from 'react'
 
 interface MessageBubbleProps {
   message: Message
   onRetry?: () => void
+  searchQuery?: string
 }
 
-export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
+export function MessageBubble({ message, onRetry, searchQuery = '' }: MessageBubbleProps) {
   const { t } = useLanguage()
   const hasError = !!message.error
   const isRetryable = message.error?.retryable
+
+  const highlightText = (text: string, query: string): React.ReactNode => {
+    if (!query.trim()) return text
+    
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapedQuery})`, 'gi')
+    const parts = text.split(regex)
+    
+    return parts.map((part, index) => {
+      if (index % 2 === 1) {
+        return (
+          <mark key={index} className="bg-yellow-200 dark:bg-yellow-900/50">
+            {part}
+          </mark>
+        )
+      }
+      return <span key={index}>{part}</span>
+    })
+  }
+
+  const markdownComponents = searchQuery.trim() ? {
+    text: ({ children }: any) => (typeof children === 'string' ? highlightText(children, searchQuery) : children),
+  } : undefined
 
   return (
     <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -61,9 +85,14 @@ export function MessageBubble({ message, onRetry }: MessageBubbleProps) {
             )}
           </div>
         ) : message.role === 'assistant' ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={markdownComponents}
+          >
+            {message.content}
+          </ReactMarkdown>
         ) : (
-          <p>{message.content}</p>
+          <p>{highlightText(message.content, searchQuery)}</p>
         )}
       </div>
     </div>

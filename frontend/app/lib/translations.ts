@@ -42,6 +42,8 @@ export const translations = {
       streaming: 'Streaming',
       metrics: 'Metrics',
       errors: 'Errors',
+      searchHistory: 'Search History',
+      searchPlaceholder: 'Search in messages...',
     },
     errors: {
       validation: 'Your request contains content that violates our usage policy',
@@ -151,6 +153,8 @@ export const translations = {
       streaming: 'Стриминг',
       metrics: 'Метрики',
       errors: 'Ошибки',
+      searchHistory: 'Поиск по истории',
+      searchPlaceholder: 'Поиск в сообщениях...',
     },
     errors: {
       validation: 'Ваш запрос содержит контент, нарушающий правила использования',
