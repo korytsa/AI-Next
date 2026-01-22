@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { Message } from '../types'
-import { ChatError } from '@/app/lib/error-handler'
 import { useMessages } from './useMessages'
 import { useUserSettings } from './useUserSettings'
 import { useChatApi } from './useChatApi'
 import { useExportWorker } from './useExportWorker'
+import { exportMessages, getFileExtension, getMimeType, ExportFormat } from '@/app/lib/export-formats'
 import { sanitizeText } from '@/app/lib/sanitization'
 import { parseChatError, createErrorMessage } from './useChatApiHelpers'
 
@@ -61,8 +61,6 @@ export function useChat() {
     scrollToBottom,
   })
 
-  const { exportMessages: exportMessagesWorker } = useExportWorker()
-
   useEffect(() => {
     if (!loading && inputRef.current && displayedMessages.length > 1) {
       setTimeout(() => {
@@ -109,18 +107,25 @@ export function useChat() {
     clearMessagesHistory()
   }
 
-  const exportDialog = async () => {
+  const exportDialog = async (format: ExportFormat = 'txt') => {
     if (allMessages.length === 0) return
 
     try {
       setIsExporting(true)
-      const dialogText = await exportMessagesWorker(allMessages)
 
-      const blob = new Blob([dialogText], { type: 'text/plain' })
+      if (format === 'pdf') {
+        exportMessages(allMessages, format)
+        return
+      }
+
+      const exportedContent = exportMessages(allMessages, format)
+      if (!exportedContent) return
+
+      const blob = new Blob([exportedContent], { type: getMimeType(format) })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `chat-export-${new Date().toISOString().split('T')[0]}.txt`
+      a.download = `chat-export-${new Date().toISOString().split('T')[0]}.${getFileExtension(format)}`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

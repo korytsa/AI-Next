@@ -16,7 +16,7 @@ interface ChatHeaderProps {
   onEditName?: (name: string) => void
   responseMode: ResponseMode
   onSetResponseMode: (mode: ResponseMode) => void
-  onExportDialog?: () => void
+  onExportDialog?: (format: 'txt' | 'markdown' | 'json' | 'pdf') => void
   totalTokens?: number
   chainOfThought: ChainOfThoughtMode
   onSetChainOfThought: (mode: ChainOfThoughtMode) => void

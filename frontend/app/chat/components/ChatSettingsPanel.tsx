@@ -1,4 +1,6 @@
-import { Download, BarChart3, AlertTriangle } from 'lucide-react'
+import { Download, BarChart3, AlertTriangle, FileText, FileCode, FileJson, FileType } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { ExportFormat } from '@/app/lib/export-formats'
 import { ResponseMode, ChainOfThoughtMode } from '../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
 import Link from 'next/link'
@@ -15,7 +17,7 @@ interface ChatSettingsPanelProps {
   onSetChainOfThought: (mode: ChainOfThoughtMode) => void
   selectedModel: string
   onSetSelectedModel: (model: string) => void
-  onExportDialog?: () => void
+  onExportDialog?: (format: ExportFormat) => void
   isExporting?: boolean
   currentInput?: string
   onSelectTemplate?: (content: string) => void
@@ -37,6 +39,36 @@ export function ChatSettingsPanel({
   onSelectTemplate,
 }: ChatSettingsPanelProps) {
   const { t } = useLanguage()
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false)
+      }
+    }
+
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showExportMenu])
+
+  const handleExport = (format: ExportFormat) => {
+    setShowExportMenu(false)
+    onExportDialog?.(format)
+  }
+
+  const formatIcons = {
+    txt: FileText,
+    markdown: FileCode,
+    json: FileJson,
+    pdf: FileType,
+  }
   
   return (
     <div className="border-t px-4 py-3 bg-white dark:bg-gray-800">
@@ -140,16 +172,39 @@ export function ChatSettingsPanel({
           </button>
         </div>
         {onExportDialog && (
-          <button
-            type="button"
-            onClick={onExportDialog}
-            disabled={loading || isExporting}
-            className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            title={isExporting ? t('chat.loading') : t('chat.export')}
-          >
-            <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
-            {isExporting ? t('chat.loading') : t('chat.export')}
-          </button>
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              type="button"
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={loading || isExporting}
+              className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title={isExporting ? t('chat.loading') : t('chat.export')}
+            >
+              <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
+              {isExporting ? t('chat.loading') : t('chat.export')}
+            </button>
+            {showExportMenu && !isExporting && (
+              <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 min-w-[180px]">
+                <div className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 mb-1">
+                  {t('chat.exportFormat')}
+                </div>
+                {(['txt', 'markdown', 'json', 'pdf'] as ExportFormat[]).map((format) => {
+                  const Icon = formatIcons[format]
+                  return (
+                    <button
+                      key={format}
+                      type="button"
+                      onClick={() => handleExport(format)}
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                    >
+                      <Icon className="w-4 h-4" />
+                      {t(`chat.${format}`)}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
         <Link
           href="/metrics"
