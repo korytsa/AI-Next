@@ -22,6 +22,8 @@ interface ChatHeaderProps {
   onSetChainOfThought: (mode: ChainOfThoughtMode) => void
   selectedModel: string
   onSetSelectedModel: (model: string) => void
+  autoPlayVoice?: boolean
+  onToggleAutoPlayVoice?: () => void
   isExporting?: boolean
   currentInput?: string
   onSelectTemplate?: (content: string) => void
@@ -29,7 +31,7 @@ interface ChatHeaderProps {
   onSetSearchQuery?: (query: string) => void
 }
 
-export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
+export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, autoPlayVoice, onToggleAutoPlayVoice, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(true)
   const { t } = useLanguage()
   
@@ -99,6 +101,8 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
           onSetChainOfThought={onSetChainOfThought}
           selectedModel={selectedModel}
           onSetSelectedModel={onSetSelectedModel}
+          autoPlayVoice={autoPlayVoice}
+          onToggleAutoPlayVoice={onToggleAutoPlayVoice}
           onExportDialog={onExportDialog}
           isExporting={isExporting}
           currentInput={currentInput}

@@ -14,6 +14,8 @@ interface MessagesListProps {
   hasMoreMessages?: boolean
   isLoadingMore?: boolean
   searchQuery?: string
+  autoPlayVoice?: boolean
+  useStreaming?: boolean
 }
 
 export function MessagesList({ 
@@ -26,6 +28,8 @@ export function MessagesList({
   hasMoreMessages = false,
   isLoadingMore = false,
   searchQuery = '',
+  autoPlayVoice = false,
+  useStreaming = true,
 }: MessagesListProps) {
   const { t } = useLanguage()
   
@@ -44,14 +48,22 @@ export function MessagesList({
         </div>
       )}
       <div ref={messagesStartRef} />
-      {messages.map((message, idx) => (
+      {messages.map((message, idx) => {
+        const isLast = idx === messages.length - 1
+        // For streaming: wait until loading is false. For regular: message is complete when it exists
+        const isComplete = useStreaming ? (!loading && isLast) : isLast
+        return (
         <MessageBubble 
           key={idx} 
           message={message} 
           onRetry={message.error?.retryable ? onRetry : undefined}
           searchQuery={searchQuery}
+            autoPlayVoice={autoPlayVoice}
+            isLastMessage={isComplete}
+            isLoading={loading && isLast}
         />
-      ))}
+        )
+      })}
       {loading && <LoadingIndicator />}
       <div ref={messagesEndRef} />
     </div>

@@ -28,6 +28,8 @@ export default function ChatPage() {
     handleSetChainOfThought,
     selectedModel,
     handleSetSelectedModel,
+    autoPlayVoice,
+    handleSetAutoPlayVoice,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
@@ -55,6 +57,8 @@ export default function ChatPage() {
         onSetChainOfThought={handleSetChainOfThought}
         selectedModel={selectedModel}
         onSetSelectedModel={handleSetSelectedModel}
+        autoPlayVoice={autoPlayVoice}
+        onToggleAutoPlayVoice={() => handleSetAutoPlayVoice(!autoPlayVoice)}
         isExporting={isExporting}
         currentInput={input}
         onSelectTemplate={(content) => setInput(content)}
@@ -71,6 +75,8 @@ export default function ChatPage() {
         hasMoreMessages={hasMoreMessages}
         isLoadingMore={isLoadingMore}
         searchQuery={searchQuery}
+        autoPlayVoice={autoPlayVoice}
+        useStreaming={useStreaming}
       />
       <ChatInput ref={inputRef} input={input} setInput={setInput} onSubmit={handleSubmit} loading={loading} onCancel={cancelRequest} />
     </div>

@@ -17,6 +17,8 @@ interface ChatSettingsPanelProps {
   onSetChainOfThought: (mode: ChainOfThoughtMode) => void
   selectedModel: string
   onSetSelectedModel: (model: string) => void
+  autoPlayVoice?: boolean
+  onToggleAutoPlayVoice?: () => void
   onExportDialog?: (format: ExportFormat) => void
   isExporting?: boolean
   currentInput?: string
@@ -33,6 +35,8 @@ export function ChatSettingsPanel({
   onSetChainOfThought,
   selectedModel,
   onSetSelectedModel,
+  autoPlayVoice = false,
+  onToggleAutoPlayVoice,
   onExportDialog,
   isExporting = false,
   currentInput = '',
@@ -171,6 +175,25 @@ export function ChatSettingsPanel({
             />
           </button>
         </div>
+        {onToggleAutoPlayVoice && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 dark:text-gray-500">{t('settings.autoPlayVoice')}:</span>
+            <button
+              type="button"
+              onClick={onToggleAutoPlayVoice}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                autoPlayVoice ? 'bg-blue-500' : 'bg-gray-300'
+              }`}
+              disabled={loading}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  autoPlayVoice ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        )}
         {onExportDialog && (
           <div className="relative" ref={exportMenuRef}>
             <button

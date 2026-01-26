@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   responseMode: 'ai-chat-response-mode',
   chainOfThought: 'ai-chat-chain-of-thought',
   selectedModel: 'ai-chat-selected-model',
+  autoPlayVoice: 'ai-chat-auto-play-voice',
 } as const
 
 export type ResponseMode = 'short' | 'detailed'
@@ -18,6 +19,7 @@ export function useUserSettings() {
   const [responseMode, setResponseMode] = useState<ResponseMode>('detailed')
   const [chainOfThought, setChainOfThought] = useState<ChainOfThoughtMode>('none')
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL_ID)
+  const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(false)
   const isHydrated = useRef(false)
 
   useEffect(() => {
@@ -38,6 +40,9 @@ export function useUserSettings() {
     setChainOfThought(getFromStorage(STORAGE_KEYS.chainOfThought, 'none' as ChainOfThoughtMode, isValidChainOfThought))
 
     setSelectedModel(getFromStorage(STORAGE_KEYS.selectedModel, DEFAULT_MODEL_ID))
+
+    const loadedAutoPlayVoice = getFromStorage(STORAGE_KEYS.autoPlayVoice, false)
+    setAutoPlayVoice(typeof loadedAutoPlayVoice === 'boolean' ? loadedAutoPlayVoice : false)
 
     isHydrated.current = true
   }, [])
@@ -63,6 +68,11 @@ export function useUserSettings() {
     saveToStorage(STORAGE_KEYS.selectedModel, model)
   }
 
+  const handleSetAutoPlayVoice = (enabled: boolean) => {
+    setAutoPlayVoice(enabled)
+    saveToStorage(STORAGE_KEYS.autoPlayVoice, enabled)
+  }
+
   return {
     userName,
     handleSetUserName,
@@ -72,5 +82,7 @@ export function useUserSettings() {
     handleSetChainOfThought,
     selectedModel,
     handleSetSelectedModel,
+    autoPlayVoice,
+    handleSetAutoPlayVoice,
   }
 }

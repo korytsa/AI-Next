@@ -38,6 +38,8 @@ export function useChat() {
     handleSetChainOfThought,
     selectedModel,
     handleSetSelectedModel,
+    autoPlayVoice,
+    handleSetAutoPlayVoice,
   } = useUserSettings()
 
   const {
@@ -127,6 +129,8 @@ export function useChat() {
     handleSetChainOfThought,
     selectedModel,
     handleSetSelectedModel,
+    autoPlayVoice,
+    handleSetAutoPlayVoice,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
