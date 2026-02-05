@@ -6,6 +6,7 @@ import {
 } from './few-shot-examples'
 import { getChainOfThoughtPrompt, ChainOfThoughtMode } from './chain-of-thought'
 import { trimMessages, trimAndSummarizeMessages, TrimmingOptions } from './message-trimming'
+import { retrieveContext } from './rag'
 
 export type ResponseMode = 'short' | 'detailed'
 
@@ -58,10 +59,30 @@ export async function prepareMessages(
   userName?: string | null, 
   responseMode: ResponseMode = 'detailed',
   chainOfThought: ChainOfThoughtMode = 'none',
-  trimmingOptions?: TrimmingOptions
+  trimmingOptions?: TrimmingOptions,
+  useRAG: boolean = false,
+  ragMaxDocuments: number = 3
 ) {
+  const messagesToProcess = [...messages]
   const systemMessage = getSystemMessage(userName, responseMode, true, chainOfThought)
-  const allMessages = [systemMessage, ...messages]
+
+  if (useRAG && messagesToProcess.length > 0) {
+    const lastUserMessage = messagesToProcess
+      .slice()
+      .reverse()
+      .find((msg: any) => msg.role === 'user')
+    
+    if (lastUserMessage?.content) {
+      const ragContext = await retrieveContext(lastUserMessage.content, ragMaxDocuments)
+      
+      if (ragContext.enabled && ragContext.formattedContext) {
+        const ragInstruction = '\n\n⚠️ RAG MODE ACTIVE: When knowledge base context is provided below, you MUST prioritize it over your general knowledge. Use the exact information from the knowledge base.\n'
+        systemMessage.content = `${systemMessage.content}${ragInstruction}\n${ragContext.formattedContext}`
+      }
+    }
+  }
+
+  const allMessages = [systemMessage, ...messagesToProcess]
 
   const options = trimmingOptions || {
     strategy: 'summarize' as const,
@@ -89,9 +110,19 @@ export async function createChatCompletion(
   responseMode: ResponseMode = 'detailed',
   chainOfThought: ChainOfThoughtMode = 'none',
   trimmingOptions?: TrimmingOptions,
-  model?: string
+  model?: string,
+  useRAG: boolean = false,
+  ragMaxDocuments: number = 3
 ) {
-  const preparedMessages = await prepareMessages(messages, userName, responseMode, chainOfThought, trimmingOptions)
+  const preparedMessages = await prepareMessages(
+    messages, 
+    userName, 
+    responseMode, 
+    chainOfThought, 
+    trimmingOptions,
+    useRAG,
+    ragMaxDocuments
+  )
   
   return openai.chat.completions.create({
     model: model || DEFAULT_MODEL,

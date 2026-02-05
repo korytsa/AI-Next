@@ -13,6 +13,8 @@ interface UseChatApiProps {
   responseMode: ResponseMode
   chainOfThought: ChainOfThoughtMode
   selectedModel: string
+  useRAG?: boolean
+  ragMaxDocuments?: number
   scrollToBottom: () => void
 }
 
@@ -24,6 +26,8 @@ export function useChatApi({
   responseMode,
   chainOfThought,
   selectedModel,
+  useRAG = false,
+  ragMaxDocuments = 3,
   scrollToBottom,
 }: UseChatApiProps) {
   const [loading, setLoading] = useState(false)
@@ -36,6 +40,8 @@ export function useChatApi({
     responseMode,
     chainOfThought,
     selectedModel,
+    useRAG,
+    ragMaxDocuments,
     addMessage,
     updateLastMessage,
     setTotalTokens,
@@ -50,6 +56,8 @@ export function useChatApi({
     responseMode,
     chainOfThought,
     selectedModel,
+    useRAG,
+    ragMaxDocuments,
     addMessage,
     setTotalTokens,
     setLoading,

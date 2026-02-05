@@ -30,6 +30,8 @@ export default function ChatPage() {
     handleSetSelectedModel,
     autoPlayVoice,
     handleSetAutoPlayVoice,
+    useRAG,
+    handleSetUseRAG,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
@@ -59,6 +61,8 @@ export default function ChatPage() {
         onSetSelectedModel={handleSetSelectedModel}
         autoPlayVoice={autoPlayVoice}
         onToggleAutoPlayVoice={() => handleSetAutoPlayVoice(!autoPlayVoice)}
+        useRAG={useRAG}
+        onToggleUseRAG={() => handleSetUseRAG(!useRAG)}
         isExporting={isExporting}
         currentInput={input}
         onSelectTemplate={(content) => setInput(content)}

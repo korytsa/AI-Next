@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model, useCache = false } = body
+    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model, useCache = false, useRAG = false, ragMaxDocuments = 3 } = body
     selectedModel = model || DEFAULT_MODEL_ID
 
     if (!validateMessagesFormat(messages)) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const completion = await createChatCompletion(messagesToSend, false, userName, responseMode, chainOfThought, undefined, model)
+    const completion = await createChatCompletion(messagesToSend, false, userName, responseMode, chainOfThought, undefined, model, useRAG, ragMaxDocuments)
 
     if ('choices' in completion) {
       const response = {

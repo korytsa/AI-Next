@@ -21,7 +21,9 @@ export function createRequestBody(
   userName: string | null | undefined,
   responseMode: ResponseMode,
   chainOfThought: ChainOfThoughtMode,
-  selectedModel: string
+  selectedModel: string,
+  useRAG: boolean = false,
+  ragMaxDocuments: number = 3
 ) {
   return {
     messages: messagesToSend.map((m) => ({ role: m.role, content: m.content })),
@@ -29,6 +31,8 @@ export function createRequestBody(
     responseMode,
     chainOfThought,
     model: selectedModel,
+    useRAG,
+    ragMaxDocuments,
   }
 }
 

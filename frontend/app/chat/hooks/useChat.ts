@@ -40,6 +40,8 @@ export function useChat() {
     handleSetSelectedModel,
     autoPlayVoice,
     handleSetAutoPlayVoice,
+    useRAG,
+    handleSetUseRAG,
   } = useUserSettings()
 
   const {
@@ -58,6 +60,7 @@ export function useChat() {
     responseMode,
     chainOfThought,
     selectedModel,
+    useRAG,
     scrollToBottom,
   })
 
@@ -131,6 +134,8 @@ export function useChat() {
     handleSetSelectedModel,
     autoPlayVoice,
     handleSetAutoPlayVoice,
+    useRAG,
+    handleSetUseRAG,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,

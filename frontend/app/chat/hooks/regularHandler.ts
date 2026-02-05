@@ -7,6 +7,8 @@ interface RegularHandlerProps {
   responseMode: ResponseMode
   chainOfThought: ChainOfThoughtMode
   selectedModel: string
+  useRAG?: boolean
+  ragMaxDocuments?: number
   addMessage: (message: Message) => void
   setTotalTokens: (updater: (prev: number) => number) => void
   setLoading: (loading: boolean) => void
@@ -23,6 +25,8 @@ export async function handleRegularSubmit(
     responseMode,
     chainOfThought,
     selectedModel,
+    useRAG = false,
+    ragMaxDocuments = 3,
     addMessage,
     setTotalTokens,
     setLoading,
@@ -35,7 +39,7 @@ export async function handleRegularSubmit(
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(createRequestBody(messagesToSend, userName, responseMode, chainOfThought, selectedModel)),
+      body: JSON.stringify(createRequestBody(messagesToSend, userName, responseMode, chainOfThought, selectedModel, useRAG, ragMaxDocuments)),
       signal: abortControllerRef.current.signal,
     })
 

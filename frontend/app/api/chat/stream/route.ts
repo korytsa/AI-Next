@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       return throttleCheck.response as Response
     }
 
-    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model } = await req.json()
+    const { messages, userName, responseMode = 'detailed', chainOfThought = 'none', model, useRAG = false, ragMaxDocuments = 3 } = await req.json()
     selectedModel = model || DEFAULT_MODEL_ID
 
     if (!validateMessagesFormat(messages)) {
@@ -43,7 +43,9 @@ export async function POST(req: NextRequest) {
       responseMode,
       chainOfThought,
       undefined,
-      model
+      model,
+      useRAG,
+      ragMaxDocuments
     )) as AsyncIterable<any>
 
     const encoder = new TextEncoder()

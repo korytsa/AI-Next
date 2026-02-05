@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { DEFAULT_MODEL_ID } from '@/app/lib/models'
-import { getFromStorage, saveToStorage } from '@/app/lib/storage'
+import { getFromStorage, saveToStorage, getJsonFromStorage, saveJsonToStorage } from '@/app/lib/storage'
 
 const STORAGE_KEYS = {
   userName: 'ai-chat-username',
@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   chainOfThought: 'ai-chat-chain-of-thought',
   selectedModel: 'ai-chat-selected-model',
   autoPlayVoice: 'ai-chat-auto-play-voice',
+  useRAG: 'ai-chat-use-rag',
 } as const
 
 export type ResponseMode = 'short' | 'detailed'
@@ -20,6 +21,7 @@ export function useUserSettings() {
   const [chainOfThought, setChainOfThought] = useState<ChainOfThoughtMode>('none')
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL_ID)
   const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(false)
+  const [useRAG, setUseRAG] = useState<boolean>(false)
   const isHydrated = useRef(false)
 
   useEffect(() => {
@@ -41,8 +43,11 @@ export function useUserSettings() {
 
     setSelectedModel(getFromStorage(STORAGE_KEYS.selectedModel, DEFAULT_MODEL_ID))
 
-    const loadedAutoPlayVoice = getFromStorage(STORAGE_KEYS.autoPlayVoice, false)
-    setAutoPlayVoice(typeof loadedAutoPlayVoice === 'boolean' ? loadedAutoPlayVoice : false)
+    const loadedAutoPlayVoice = getJsonFromStorage(STORAGE_KEYS.autoPlayVoice, false)
+    setAutoPlayVoice(loadedAutoPlayVoice)
+
+    const loadedUseRAG = getJsonFromStorage(STORAGE_KEYS.useRAG, false)
+    setUseRAG(loadedUseRAG)
 
     isHydrated.current = true
   }, [])
@@ -70,7 +75,12 @@ export function useUserSettings() {
 
   const handleSetAutoPlayVoice = (enabled: boolean) => {
     setAutoPlayVoice(enabled)
-    saveToStorage(STORAGE_KEYS.autoPlayVoice, enabled)
+    saveJsonToStorage(STORAGE_KEYS.autoPlayVoice, enabled)
+  }
+
+  const handleSetUseRAG = (enabled: boolean) => {
+    setUseRAG(enabled)
+    saveJsonToStorage(STORAGE_KEYS.useRAG, enabled)
   }
 
   return {
@@ -84,5 +94,7 @@ export function useUserSettings() {
     handleSetSelectedModel,
     autoPlayVoice,
     handleSetAutoPlayVoice,
+    useRAG,
+    handleSetUseRAG,
   }
 }

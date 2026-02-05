@@ -7,6 +7,8 @@ interface StreamingHandlerProps {
   responseMode: ResponseMode
   chainOfThought: ChainOfThoughtMode
   selectedModel: string
+  useRAG?: boolean
+  ragMaxDocuments?: number
   addMessage: (message: Message) => void
   updateLastMessage: (updater: (prev: Message) => Message) => void
   setTotalTokens: (updater: (prev: number) => number) => void
@@ -26,6 +28,8 @@ export async function handleStreamingSubmit(
     responseMode,
     chainOfThought,
     selectedModel,
+    useRAG = false,
+    ragMaxDocuments = 3,
     addMessage,
     updateLastMessage,
     setTotalTokens,
@@ -44,7 +48,7 @@ export async function handleStreamingSubmit(
     const response = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(createRequestBody(messagesToSend, userName, responseMode, chainOfThought, selectedModel)),
+      body: JSON.stringify(createRequestBody(messagesToSend, userName, responseMode, chainOfThought, selectedModel, useRAG, ragMaxDocuments)),
       signal: abortControllerRef.current.signal,
     })
 
