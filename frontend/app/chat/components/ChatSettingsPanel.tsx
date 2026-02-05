@@ -79,7 +79,7 @@ export function ChatSettingsPanel({
   }
   
   return (
-    <div className="border-t px-4 py-3 bg-white dark:bg-gray-800">
+    <div className="border-t border-slate-200/50 dark:border-slate-800/50 px-6 py-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm">
       <div className="flex items-center gap-6 flex-wrap">
         <div className="flex items-center gap-2">
           <label className="text-xs text-gray-500 dark:text-gray-500">{t('settings.model')}:</label>
@@ -87,7 +87,7 @@ export function ChatSettingsPanel({
             value={selectedModel}
             onChange={(e) => onSetSelectedModel(e.target.value)}
             disabled={loading}
-            className="pl-1.5 pr-8 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L6%206L11%201%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_0.5rem_center] bg-[length:12px_8px]"
+            className="pl-3 pr-9 py-2 text-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20viewBox%3D%220%200%2012%208%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M1%201L6%206L11%201%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-no-repeat bg-[right_0.75rem_center] bg-[length:12px_8px] shadow-soft transition-all duration-200"
           >
             {AVAILABLE_MODELS.map((model) => (
               <option key={model.id} value={model.id}>
@@ -102,10 +102,10 @@ export function ChatSettingsPanel({
             type="button"
             onClick={() => onSetResponseMode('short')}
             disabled={loading}
-            className={`px-2 py-1 text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-3 py-1.5 text-sm rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft ${
               responseMode === 'short'
-                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                ? 'bg-indigo-100/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-soft-lg'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
             }`}
           >
             {t('settings.short')}
@@ -129,10 +129,10 @@ export function ChatSettingsPanel({
             type="button"
             onClick={() => onSetChainOfThought('none')}
             disabled={loading}
-            className={`px-2 py-1 text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`px-3 py-1.5 text-sm rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft ${
               chainOfThought === 'none'
-                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                ? 'bg-indigo-100/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-soft-lg'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
             }`}
           >
             {t('settings.none')}
@@ -167,8 +167,8 @@ export function ChatSettingsPanel({
           <button
             type="button"
             onClick={onToggleStreaming}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              useStreaming ? 'bg-blue-500' : 'bg-gray-300'
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 shadow-soft ${
+              useStreaming ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-slate-300 dark:bg-slate-700'
             }`}
             disabled={loading}
           >
@@ -223,14 +223,14 @@ export function ChatSettingsPanel({
               type="button"
               onClick={() => setShowExportMenu(!showExportMenu)}
               disabled={loading || isExporting}
-              className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-900/30 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
               title={isExporting ? t('chat.loading') : t('chat.export')}
             >
               <Download className={`w-4 h-4 ${isExporting ? 'animate-pulse' : ''}`} />
               {isExporting ? t('chat.loading') : t('chat.export')}
             </button>
             {showExportMenu && !isExporting && (
-              <div className="absolute top-full left-0 mt-2 z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2 min-w-[180px]">
+              <div className="absolute top-full left-0 mt-2 z-50 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl shadow-soft-xl border border-slate-200/50 dark:border-slate-700/50 p-3 min-w-[180px]">
                 <div className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 mb-1">
                   {t('chat.exportFormat')}
                 </div>
@@ -241,7 +241,7 @@ export function ChatSettingsPanel({
                       key={format}
                       type="button"
                       onClick={() => handleExport(format)}
-                      className="w-full px-3 py-2 text-sm text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                      className="w-full px-3 py-2 text-sm text-left hover:bg-slate-100/80 dark:hover:bg-slate-700/80 rounded-xl flex items-center gap-2 transition-all duration-200"
                     >
                       <Icon className="w-4 h-4" />
                       {t(`chat.${format}`)}
@@ -254,7 +254,7 @@ export function ChatSettingsPanel({
         )}
         <Link
           href="/metrics"
-          className="px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-900/30 rounded-2xl transition-all duration-200 flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
           title={t('settings.metrics')}
         >
           <BarChart3 className="w-4 h-4" />
@@ -262,7 +262,7 @@ export function ChatSettingsPanel({
         </Link>
         <Link
           href="/errors"
-          className="px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 rounded-2xl transition-all duration-200 flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
           title={t('settings.errors')}
         >
           <AlertTriangle className="w-4 h-4" />

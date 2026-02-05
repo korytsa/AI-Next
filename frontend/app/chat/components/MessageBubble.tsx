@@ -153,14 +153,14 @@ export function MessageBubble({ message, onRetry, searchQuery = '', autoPlayVoic
   } : undefined
 
   return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
-        className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+        className={`max-w-[80%] rounded-3xl px-5 py-3 shadow-soft ${
           message.role === 'user' 
-            ? 'bg-blue-500 text-white' 
+            ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-soft-lg' 
             : hasError
-            ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-            : 'bg-gray-100 dark:bg-gray-800'
+            ? 'bg-red-50/80 dark:bg-red-950/30 border border-red-200/50 dark:border-red-800/30 backdrop-blur-sm'
+            : 'bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50'
         }`}
       >
         {hasError && message.error ? (
@@ -190,7 +190,7 @@ export function MessageBubble({ message, onRetry, searchQuery = '', autoPlayVoic
             {isRetryable && onRetry && (
               <button
                 onClick={onRetry}
-                className="mt-2 px-3 py-1.5 text-sm bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors flex items-center gap-2"
+                className="mt-2 px-4 py-2 text-sm bg-red-100/80 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-2xl hover:bg-red-200/80 dark:hover:bg-red-900/60 transition-all duration-200 flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
               >
                 <RotateCcw className="w-4 h-4" />
                 {t('chat.retry')}
@@ -210,7 +210,7 @@ export function MessageBubble({ message, onRetry, searchQuery = '', autoPlayVoic
             {isSpeaking && isSupported && !hasError && (
               <button
                 onClick={stop}
-                className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="flex-shrink-0 p-2 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-700/80 transition-all duration-200 shadow-soft"
                 title={t('chat.stopVoice')}
               >
                 <Square className="w-4 h-4 text-red-600 dark:text-red-400" />

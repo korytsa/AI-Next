@@ -63,6 +63,9 @@ export const translations = {
       errors: 'Errors',
       searchHistory: 'Search History',
       searchPlaceholder: 'Search in messages...',
+      aiSettings: 'AI Settings',
+      voice: 'Voice',
+      templates: 'Templates',
     },
     errors: {
       validation: 'Your request contains content that violates our usage policy',
@@ -193,6 +196,9 @@ export const translations = {
       errors: 'Ошибки',
       searchHistory: 'Поиск по истории',
       searchPlaceholder: 'Поиск в сообщениях...',
+      aiSettings: 'Настройки AI',
+      voice: 'Голос',
+      templates: 'Шаблоны',
     },
     errors: {
       validation: 'Ваш запрос содержит контент, нарушающий правила использования',
