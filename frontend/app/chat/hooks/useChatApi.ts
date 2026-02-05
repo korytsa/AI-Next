@@ -15,6 +15,7 @@ interface UseChatApiProps {
   selectedModel: string
   useRAG?: boolean
   ragMaxDocuments?: number
+  useCache?: boolean
   scrollToBottom: () => void
 }
 
@@ -25,11 +26,12 @@ export function useChatApi({
   userName,
   responseMode,
   chainOfThought,
-  selectedModel,
-  useRAG = false,
-  ragMaxDocuments = 3,
-  scrollToBottom,
-}: UseChatApiProps) {
+    selectedModel,
+    useRAG = false,
+    ragMaxDocuments = 3,
+    useCache = false,
+    scrollToBottom,
+  }: UseChatApiProps) {
   const [loading, setLoading] = useState(false)
   const [totalTokens, setTotalTokens] = useState(0)
   const streamingContentRef = useRef<string>('')
@@ -42,6 +44,7 @@ export function useChatApi({
     selectedModel,
     useRAG,
     ragMaxDocuments,
+    useCache,
     addMessage,
     updateLastMessage,
     setTotalTokens,
@@ -58,6 +61,7 @@ export function useChatApi({
     selectedModel,
     useRAG,
     ragMaxDocuments,
+    useCache,
     addMessage,
     setTotalTokens,
     setLoading,

@@ -1,6 +1,6 @@
 'use client'
 
-import { Zap, Sparkles } from 'lucide-react'
+import { Zap, Sparkles, Database } from 'lucide-react'
 import { ResponseMode, ChainOfThoughtMode } from '../../hooks/useChat'
 import { AVAILABLE_MODELS } from '@/app/lib/models'
 import { useLanguage } from '@/app/contexts/LanguageContext'
@@ -16,6 +16,8 @@ interface AISettingsTabProps {
   onToggleStreaming: () => void
   useRAG?: boolean
   onToggleUseRAG?: () => void
+  useCache?: boolean
+  onToggleUseCache?: () => void
   loading: boolean
 }
 
@@ -28,9 +30,11 @@ export function AISettingsTab({
   onSetChainOfThought,
   useStreaming,
   onToggleStreaming,
-  useRAG = false,
-  onToggleUseRAG,
-  loading,
+    useRAG = false,
+    onToggleUseRAG,
+    useCache = false,
+    onToggleUseCache,
+    loading,
 }: AISettingsTabProps) {
   const { t } = useLanguage()
 
@@ -153,6 +157,32 @@ export function AISettingsTab({
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
                 useRAG ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+      )}
+
+      {onToggleUseCache && (
+        <div className="flex items-center justify-between p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl">
+          <div className="flex items-center gap-3">
+            <Database className="w-5 h-5 text-green-500" />
+            <div>
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('settings.cache')}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('settings.cacheDescription')}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onToggleUseCache}
+            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-200 shadow-soft ${
+              useCache ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+            }`}
+            disabled={loading}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                useCache ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
           </button>

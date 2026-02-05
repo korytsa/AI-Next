@@ -25,6 +25,8 @@ interface ChatHeaderProps {
   onToggleAutoPlayVoice?: () => void
   useRAG?: boolean
   onToggleUseRAG?: () => void
+  useCache?: boolean
+  onToggleUseCache?: () => void
   isExporting?: boolean
   currentInput?: string
   onSelectTemplate?: (content: string) => void
@@ -32,7 +34,7 @@ interface ChatHeaderProps {
   onSetSearchQuery?: (query: string) => void
 }
 
-export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, autoPlayVoice, onToggleAutoPlayVoice, useRAG, onToggleUseRAG, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
+export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, autoPlayVoice, onToggleAutoPlayVoice, useRAG, onToggleUseRAG, useCache, onToggleUseCache, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const { t } = useLanguage()
   
@@ -103,6 +105,8 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
         onToggleAutoPlayVoice={onToggleAutoPlayVoice}
         useRAG={useRAG}
         onToggleUseRAG={onToggleUseRAG}
+        useCache={useCache}
+        onToggleUseCache={onToggleUseCache}
         onExportDialog={onExportDialog}
         isExporting={isExporting}
         currentInput={currentInput}

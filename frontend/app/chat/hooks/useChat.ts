@@ -42,6 +42,8 @@ export function useChat() {
     handleSetAutoPlayVoice,
     useRAG,
     handleSetUseRAG,
+    useCache,
+    handleSetUseCache,
   } = useUserSettings()
 
   const {
@@ -61,6 +63,7 @@ export function useChat() {
     chainOfThought,
     selectedModel,
     useRAG,
+    useCache,
     scrollToBottom,
   })
 
@@ -73,6 +76,26 @@ export function useChat() {
       }, 100)
     }
   }, [loading, displayedMessages.length])
+
+  const handleSetUseCacheWithStreaming = (enabled: boolean) => {
+    handleSetUseCache(enabled)
+    if (enabled && useStreaming) {
+      setUseStreaming(false)
+    }
+  }
+
+  const handleSetUseStreamingWithCache = (enabled: boolean) => {
+    setUseStreaming(enabled)
+    if (enabled && useCache) {
+      handleSetUseCache(false)
+    }
+  }
+
+  useEffect(() => {
+    if (useCache && useStreaming) {
+      setUseStreaming(false)
+    }
+  }, [useCache, useStreaming])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,7 +138,8 @@ export function useChat() {
     setInput,
     loading,
     useStreaming,
-    setUseStreaming,
+    setUseStreaming: handleSetUseStreamingWithCache,
+    handleSetUseStreamingWithCache,
     messagesEndRef,
     messagesStartRef,
     inputRef,
@@ -136,6 +160,8 @@ export function useChat() {
     handleSetAutoPlayVoice,
     useRAG,
     handleSetUseRAG,
+    useCache,
+    handleSetUseCache: handleSetUseCacheWithStreaming,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,

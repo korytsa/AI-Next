@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   selectedModel: 'ai-chat-selected-model',
   autoPlayVoice: 'ai-chat-auto-play-voice',
   useRAG: 'ai-chat-use-rag',
+  useCache: 'ai-chat-use-cache',
 } as const
 
 export type ResponseMode = 'short' | 'detailed'
@@ -22,6 +23,7 @@ export function useUserSettings() {
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL_ID)
   const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(false)
   const [useRAG, setUseRAG] = useState<boolean>(false)
+  const [useCache, setUseCache] = useState<boolean>(false)
   const isHydrated = useRef(false)
 
   useEffect(() => {
@@ -48,6 +50,9 @@ export function useUserSettings() {
 
     const loadedUseRAG = getJsonFromStorage(STORAGE_KEYS.useRAG, false)
     setUseRAG(loadedUseRAG)
+
+    const loadedUseCache = getJsonFromStorage(STORAGE_KEYS.useCache, false)
+    setUseCache(loadedUseCache)
 
     isHydrated.current = true
   }, [])
@@ -83,6 +88,11 @@ export function useUserSettings() {
     saveJsonToStorage(STORAGE_KEYS.useRAG, enabled)
   }
 
+  const handleSetUseCache = (enabled: boolean) => {
+    setUseCache(enabled)
+    saveJsonToStorage(STORAGE_KEYS.useCache, enabled)
+  }
+
   return {
     userName,
     handleSetUserName,
@@ -96,5 +106,7 @@ export function useUserSettings() {
     handleSetAutoPlayVoice,
     useRAG,
     handleSetUseRAG,
+    useCache,
+    handleSetUseCache,
   }
 }

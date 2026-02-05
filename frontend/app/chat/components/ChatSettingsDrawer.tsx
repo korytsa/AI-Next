@@ -28,6 +28,8 @@ interface ChatSettingsDrawerProps {
   onToggleAutoPlayVoice?: () => void
   useRAG?: boolean
   onToggleUseRAG?: () => void
+  useCache?: boolean
+  onToggleUseCache?: () => void
   onExportDialog?: (format: ExportFormat) => void
   isExporting?: boolean
   currentInput?: string
@@ -52,6 +54,8 @@ export function ChatSettingsDrawer({
   onToggleAutoPlayVoice,
   useRAG = false,
   onToggleUseRAG,
+  useCache = false,
+  onToggleUseCache,
   onExportDialog,
   isExporting = false,
   currentInput = '',
@@ -168,6 +172,8 @@ export function ChatSettingsDrawer({
               onToggleStreaming={onToggleStreaming}
               useRAG={useRAG}
               onToggleUseRAG={onToggleUseRAG}
+              useCache={useCache}
+              onToggleUseCache={onToggleUseCache}
               loading={loading}
             />
           )}

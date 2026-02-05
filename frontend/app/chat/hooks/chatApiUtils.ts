@@ -23,7 +23,8 @@ export function createRequestBody(
   chainOfThought: ChainOfThoughtMode,
   selectedModel: string,
   useRAG: boolean = false,
-  ragMaxDocuments: number = 3
+  ragMaxDocuments: number = 3,
+  useCache: boolean = false
 ) {
   return {
     messages: messagesToSend.map((m) => ({ role: m.role, content: m.content })),
@@ -33,6 +34,7 @@ export function createRequestBody(
     model: selectedModel,
     useRAG,
     ragMaxDocuments,
+    useCache,
   }
 }
 

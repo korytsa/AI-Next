@@ -13,6 +13,7 @@ export default function ChatPage() {
     loading,
     useStreaming,
     setUseStreaming,
+    handleSetUseStreamingWithCache,
     messagesEndRef,
     inputRef,
     handleSubmit,
@@ -32,6 +33,8 @@ export default function ChatPage() {
     handleSetAutoPlayVoice,
     useRAG,
     handleSetUseRAG,
+    useCache,
+    handleSetUseCache,
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
@@ -46,7 +49,7 @@ export default function ChatPage() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-950 dark:via-blue-950/20 dark:to-purple-950/10">
       <ChatHeader
         useStreaming={useStreaming}
-        onToggleStreaming={() => setUseStreaming(!useStreaming)}
+        onToggleStreaming={() => handleSetUseStreamingWithCache(!useStreaming)}
         loading={loading}
         onClearHistory={clearHistory}
         userName={userName}
@@ -63,6 +66,8 @@ export default function ChatPage() {
         onToggleAutoPlayVoice={() => handleSetAutoPlayVoice(!autoPlayVoice)}
         useRAG={useRAG}
         onToggleUseRAG={() => handleSetUseRAG(!useRAG)}
+        useCache={useCache}
+        onToggleUseCache={() => handleSetUseCache(!useCache)}
         isExporting={isExporting}
         currentInput={input}
         onSelectTemplate={(content) => setInput(content)}
