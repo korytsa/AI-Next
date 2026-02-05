@@ -46,6 +46,9 @@ next-env.d.ts
 # Logs
 logs
 dev-debug.log
+
+# Vector DB data
+data/
 # Dependency directories
 # Environment variables
 # Editor directories and files

@@ -36,11 +36,17 @@ Open [http://localhost:3000](http://localhost:3000)
 frontend/
 ├── app/
 │   ├── api/
-│   │   └── chat/          # Chat API endpoint
-│   ├── chat/              # Chat page
+│   │   ├── chat/          # Chat API endpoints
+│   │   │   ├── route.ts   # Regular chat endpoint
+│   │   │   └── stream/    # Streaming chat endpoint
+│   │   └── rag/           # RAG (Retrieval Augmented Generation)
+│   │       └── route.ts   # Mock documents and search
+│   ├── chat/              # Chat page and components
 │   └── page.tsx           # Home page
 └── lib/
-    └── openai.ts          # OpenAI client setup
+    ├── openai.ts          # OpenAI/Groq client setup
+    ├── rag.ts             # RAG context retrieval
+    └── chat-utils.ts      # Chat message preparation
 ```
 
 ## 🎓 Learning Path
@@ -48,13 +54,45 @@ frontend/
 1. **Start with the chat** - Understand basic AI integration
 2. **Study the API route** - Learn how Next.js API Routes work
 3. **Explore the OpenAI client** - Understand API configuration
-4. **Experiment** - Try different models and parameters
+4. **Try RAG** - Enable RAG in settings and see how it enhances responses
+5. **Experiment** - Try different models, parameters, and features
+
+## 🔍 Features
+
+### Chat
+- ✅ Regular and streaming responses
+- ✅ Message history with localStorage
+- ✅ Error handling and retry mechanism
+- ✅ Multiple AI models (Groq)
+- ✅ Response modes (short/detailed)
+- ✅ Chain of Thought reasoning
+
+### RAG (Retrieval Augmented Generation)
+- ✅ Knowledge base with 8 mock documents
+- ✅ Keyword-based semantic search
+- ✅ Relevance scoring (title, tags, content)
+- ✅ Context formatting for AI
+- ✅ Toggle in chat settings
+- ✅ Automatic context injection into system prompt
+
+### Voice
+- ✅ Speech recognition (voice input)
+- ✅ Text-to-speech (voice output)
+- ✅ Auto-playback option
+- ✅ Multi-language support
 
 ## 📖 Key Files to Study
 
-- `frontend/app/api/chat/route.ts` - API endpoint
+### Core Chat
+- `frontend/app/api/chat/route.ts` - Regular chat API endpoint
+- `frontend/app/api/chat/stream/route.ts` - Streaming chat API endpoint
 - `frontend/app/chat/page.tsx` - Chat UI
-- `frontend/lib/openai.ts` - OpenAI setup
+- `frontend/lib/openai.ts` - OpenAI/Groq client setup
+- `frontend/lib/chat-utils.ts` - Message preparation and RAG integration
+
+### RAG (Retrieval Augmented Generation)
+- `frontend/app/api/rag/route.ts` - Mock documents and search algorithm
+- `frontend/lib/rag.ts` - RAG context retrieval and formatting
 
 ## 🔒 Security
 
