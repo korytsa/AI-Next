@@ -1,4 +1,4 @@
-import { searchMockDocuments, type SearchResult } from '@/app/api/rag/route'
+import { searchMockDocuments, type SearchResult } from '@/app/lib/rag-data'
 
 export interface RAGContext {
   documents: SearchResult[]
