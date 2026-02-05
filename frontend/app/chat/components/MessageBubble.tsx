@@ -148,8 +148,54 @@ export function MessageBubble({ message, onRetry, searchQuery = '', autoPlayVoic
     })
   }
 
+  const processChildren = (children: any): React.ReactNode => {
+    if (!searchQuery.trim()) return children
+    
+    if (typeof children === 'string') {
+      return highlightText(children, searchQuery)
+    }
+    if (Array.isArray(children)) {
+      return children.map((child, index) => (
+        <React.Fragment key={index}>{processChildren(child)}</React.Fragment>
+      ))
+    }
+    if (React.isValidElement(children) && (children.props as any)?.children) {
+      const props = children.props as any
+      return React.cloneElement(children, {
+        ...props,
+        children: processChildren(props.children)
+      } as any)
+    }
+    return children
+  }
+
+  const createMarkdownComponent = (tagName: string) => {
+    const Component = ({ children, ...props }: any) => {
+      if (!searchQuery.trim()) {
+        return React.createElement(tagName, props, children)
+      }
+      return React.createElement(tagName, props, processChildren(children))
+    }
+    Component.displayName = `Highlighted${tagName}`
+    return Component
+  }
+
   const markdownComponents = searchQuery.trim() ? {
-    text: ({ children }: any) => (typeof children === 'string' ? highlightText(children, searchQuery) : children),
+    text: ({ children }: any) => processChildren(children),
+    p: createMarkdownComponent('p'),
+    span: createMarkdownComponent('span'),
+    li: createMarkdownComponent('li'),
+    td: createMarkdownComponent('td'),
+    th: createMarkdownComponent('th'),
+    strong: createMarkdownComponent('strong'),
+    em: createMarkdownComponent('em'),
+    code: createMarkdownComponent('code'),
+    h1: createMarkdownComponent('h1'),
+    h2: createMarkdownComponent('h2'),
+    h3: createMarkdownComponent('h3'),
+    h4: createMarkdownComponent('h4'),
+    h5: createMarkdownComponent('h5'),
+    h6: createMarkdownComponent('h6'),
   } : undefined
 
   return (
