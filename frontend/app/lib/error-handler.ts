@@ -7,8 +7,18 @@ export interface ChatError {
 }
 
 export function parseError(error: any, response?: Response): ChatError {
+  const isContentError = error && typeof error === 'object' && (error.type === 'validation_error' || error.type === 'moderation_error')
+  if (isContentError) {
+    return {
+      message: error.error || error.message || 'Your request contains content that violates our usage policy',
+      type: error.type,
+      retryable: false,
+      details: error.details || [],
+    }
+  }
+
   if (response?.status === 429) {
-    const retryAfter = response.headers.get('retry-after')
+    const retryAfter = response.headers.get('retry-after') || response.headers.get('Retry-After')
     return {
       message: 'Too many requests. Please wait a moment and try again.',
       type: 'rate_limit',
