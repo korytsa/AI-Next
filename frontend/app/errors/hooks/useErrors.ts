@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { formatDate } from '@/app/lib/formatters'
 
 export interface ErrorEntry {
   id: string
@@ -60,28 +61,11 @@ export function useErrors() {
     }
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString()
-  }
-
-  const getTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      rate_limit: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-      network: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-      server: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-      validation_error: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
-      moderation_error: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
-      unknown: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
-    }
-    return colors[type] || colors.unknown
-  }
-
   return {
     errorData,
     loading,
     fetchErrors,
     handleClearErrors,
     formatDate,
-    getTypeColor,
   }
 }

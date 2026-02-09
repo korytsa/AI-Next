@@ -1,8 +1,9 @@
 import { Message } from '../types'
 import { MessageBubble } from './MessageBubble'
-import { LoadingIndicator } from './LoadingIndicator'
+import { Loading } from '@/app/components/Loading'
 import { ChevronUp } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { Button } from '@/app/components/Button'
 
 interface MessagesListProps {
   messages: Message[]
@@ -37,14 +38,16 @@ export function MessagesList({
     <div className="flex-1 overflow-y-auto p-6 space-y-2 relative">
       {hasMoreMessages && (
         <div className="flex justify-center pb-2">
-          <button
+          <Button
+            variant="primaryGhost"
+            size="md"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="px-5 py-2.5 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-900/30 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
+            className="px-5 py-2.5"
           >
             <ChevronUp className="w-4 h-4" />
             {isLoadingMore ? t('chat.loading') : t('chat.loadOlderMessages')}
-          </button>
+          </Button>
         </div>
       )}
       <div ref={messagesStartRef} />
@@ -64,7 +67,7 @@ export function MessagesList({
         />
         )
       })}
-      {loading && <LoadingIndicator />}
+      {loading && <Loading variant="dots" layout="inline" />}
       <div ref={messagesEndRef} />
     </div>
   )

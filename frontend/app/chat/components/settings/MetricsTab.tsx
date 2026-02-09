@@ -1,8 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Activity, TrendingUp, DollarSign, RefreshCw, Trash2 } from 'lucide-react'
+import { Activity, TrendingUp, DollarSign, Trash2 } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { Button } from '@/app/components/Button'
+import { Card } from '@/app/components/Card'
+import { Heading } from '@/app/components/Heading'
+import { Loading } from '@/app/components/Loading'
+import { StatCard } from '@/app/components/StatCard'
+import { ToggleButtonGroup } from '@/app/components/ToggleButtonGroup'
+import { formatNumber, formatCost } from '@/app/lib/formatters'
 
 export function MetricsTab() {
   const { t } = useLanguage()
@@ -42,25 +49,8 @@ export function MetricsTab() {
     }
   }
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num)
-  }
-
-  const formatCost = (cost: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 6,
-      maximumFractionDigits: 6,
-    }).format(cost)
-  }
-
   if (loading && !metrics) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-      </div>
-    )
+    return <Loading variant="spinner" layout="center" />
   }
 
   if (!metrics) {
@@ -74,97 +64,82 @@ export function MetricsTab() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          {(['today', 'week', 'month', 'all'] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-sm rounded-xl transition-all duration-200 ${
-                period === p
-                  ? 'bg-indigo-100/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
-              }`}
-            >
-              {t(`metrics.${p}`)}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={handleClear}
-          className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200 flex items-center gap-2"
-        >
+        <ToggleButtonGroup<'today' | 'week' | 'month' | 'all'>
+          value={period}
+          onChange={setPeriod}
+          options={[
+            { value: 'today', label: t('metrics.today') },
+            { value: 'week', label: t('metrics.week') },
+            { value: 'month', label: t('metrics.month') },
+            { value: 'all', label: t('metrics.all') },
+          ]}
+          size="sm"
+          buttonClassName="rounded-xl"
+        />
+        <Button variant="danger" size="sm" onClick={handleClear} className="rounded-xl">
           <Trash2 className="w-4 h-4" />
           {t('metrics.clear')}
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <div className="p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-600 dark:text-slate-400">{t('metrics.totalRequests')}</span>
-            <Activity className="w-4 h-4 text-indigo-500" />
-          </div>
-          <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{formatNumber(metrics.totalRequests || 0)}</div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {metrics.successfulRequests || 0} {t('metrics.successfulRequests')}, {metrics.failedRequests || 0} {t('metrics.failedRequests')}
-          </div>
-        </div>
-
-        <div className="p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-600 dark:text-slate-400">{t('metrics.totalTokens')}</span>
-            <TrendingUp className="w-4 h-4 text-green-500" />
-          </div>
-          <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{formatNumber(metrics.totalTokens || 0)}</div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {formatNumber(metrics.totalRequestTokens || 0)} {t('metrics.request')}, {formatNumber(metrics.totalResponseTokens || 0)} {t('metrics.response')}
-          </div>
-        </div>
-
-        <div className="p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-slate-600 dark:text-slate-400">{t('metrics.totalCost')}</span>
-            <DollarSign className="w-4 h-4 text-yellow-500" />
-          </div>
-          <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{formatCost(metrics.totalCost || 0)}</div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {t('metrics.avg')}: {formatCost(metrics.totalRequests > 0 ? (metrics.totalCost || 0) / metrics.totalRequests : 0)} {t('metrics.perRequest')}
-          </div>
-        </div>
+        <StatCard
+          label={t('metrics.totalRequests')}
+          value={formatNumber(metrics.totalRequests || 0)}
+          size="lg"
+          icon={Activity}
+          iconClassName="text-indigo-500"
+          subtitle={`${metrics.successfulRequests || 0} ${t('metrics.successfulRequests')}, ${metrics.failedRequests || 0} ${t('metrics.failedRequests')}`}
+        />
+        <StatCard
+          label={t('metrics.totalTokens')}
+          value={formatNumber(metrics.totalTokens || 0)}
+          size="lg"
+          icon={TrendingUp}
+          iconClassName="text-green-500"
+          subtitle={`${formatNumber(metrics.totalRequestTokens || 0)} ${t('metrics.request')}, ${formatNumber(metrics.totalResponseTokens || 0)} ${t('metrics.response')}`}
+        />
+        <StatCard
+          label={t('metrics.totalCost')}
+          value={formatCost(metrics.totalCost || 0)}
+          size="lg"
+          icon={DollarSign}
+          iconClassName="text-yellow-500"
+          subtitle={`${t('metrics.avg')}: ${formatCost(metrics.totalRequests > 0 ? (metrics.totalCost || 0) / metrics.totalRequests : 0)} ${t('metrics.perRequest')}`}
+        />
       </div>
 
       {metrics.successfulRequests > 0 && (
-        <div className="bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">{t('metrics.responseTimeRange')}</h3>
+        <Card>
+          <Heading as="h3" size="sm" weight="semibold" className="mb-4">{t('metrics.responseTimeRange')}</Heading>
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 bg-white/80 dark:bg-slate-900/50 rounded-xl">
-              <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('metrics.fastest')}</div>
-              <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                {metrics.minLatency ?? 0}ms
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('metrics.bestResponseTime')}</div>
-            </div>
-            <div className="p-3 bg-white/80 dark:bg-slate-900/50 rounded-xl">
-              <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('metrics.average')}</div>
-              <div className="text-xl font-bold text-slate-700 dark:text-slate-300">
-                {metrics.avgLatency ?? 0}ms
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('metrics.meanResponseTime')}</div>
-            </div>
-            <div className="p-3 bg-white/80 dark:bg-slate-900/50 rounded-xl">
-              <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('metrics.slowest')}</div>
-              <div className="text-xl font-bold text-red-600 dark:text-red-400">
-                {metrics.maxLatency ?? 0}ms
-              </div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('metrics.worstResponseTime')}</div>
-            </div>
+            <StatCard
+              label={t('metrics.fastest')}
+              value={`${metrics.minLatency ?? 0}ms`}
+              size="md"
+              subtitle={t('metrics.bestResponseTime')}
+              valueClassName="text-green-600 dark:text-green-400 font-bold"
+            />
+            <StatCard
+              label={t('metrics.average')}
+              value={`${metrics.avgLatency ?? 0}ms`}
+              size="md"
+              subtitle={t('metrics.meanResponseTime')}
+            />
+            <StatCard
+              label={t('metrics.slowest')}
+              value={`${metrics.maxLatency ?? 0}ms`}
+              size="md"
+              subtitle={t('metrics.worstResponseTime')}
+              valueClassName="text-red-600 dark:text-red-400 font-bold"
+            />
           </div>
-        </div>
+        </Card>
       )}
 
       {metrics.byModel && Object.keys(metrics.byModel).length > 0 && (
-        <div className="bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{t('metrics.byModel')}</h3>
+        <Card>
+          <Heading as="h3" size="sm" weight="semibold" className="mb-3">{t('metrics.byModel')}</Heading>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -202,23 +177,25 @@ export function MetricsTab() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
       {metrics.byEndpoint && (
-        <div className="bg-slate-50/80 dark:bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{t('metrics.byEndpoint')}</h3>
+        <Card>
+          <Heading as="h3" size="sm" weight="semibold" className="mb-3">{t('metrics.byEndpoint')}</Heading>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-white/80 dark:bg-slate-900/50 rounded-xl">
-              <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('metrics.chatRegular')}</div>
-              <div className="text-xl font-bold text-slate-700 dark:text-slate-300">{formatNumber(metrics.byEndpoint.chat || 0)}</div>
-            </div>
-            <div className="p-3 bg-white/80 dark:bg-slate-900/50 rounded-xl">
-              <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('metrics.stream')}</div>
-              <div className="text-xl font-bold text-slate-700 dark:text-slate-300">{formatNumber(metrics.byEndpoint.stream || 0)}</div>
-            </div>
+            <StatCard
+              label={t('metrics.chatRegular')}
+              value={formatNumber(metrics.byEndpoint.chat || 0)}
+              size="md"
+            />
+            <StatCard
+              label={t('metrics.stream')}
+              value={formatNumber(metrics.byEndpoint.stream || 0)}
+              size="md"
+            />
           </div>
-        </div>
+        </Card>
       )}
     </div>
   )

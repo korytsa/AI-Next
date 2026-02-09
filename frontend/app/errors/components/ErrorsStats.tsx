@@ -1,4 +1,5 @@
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { StatCard } from '@/app/components/StatCard'
 import { ErrorData } from '../hooks/useErrors'
 
 interface ErrorsStatsProps {
@@ -10,18 +11,24 @@ export function ErrorsStats({ errorData }: ErrorsStatsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('errorsPage.totalErrors')}</div>
-        <div className="text-2xl font-bold">{errorData.total}</div>
-      </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('errorsPage.errorTypes')}</div>
-        <div className="text-2xl font-bold">{Object.keys(errorData.stats.byType).length}</div>
-      </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('errorsPage.endpoints')}</div>
-        <div className="text-2xl font-bold">{Object.keys(errorData.stats.byEndpoint).length}</div>
-      </div>
+      <StatCard
+        label={t('errorsPage.totalErrors')}
+        value={errorData.total}
+        size="lg"
+        rounded="xl"
+      />
+      <StatCard
+        label={t('errorsPage.errorTypes')}
+        value={Object.keys(errorData.stats.byType).length}
+        size="lg"
+        rounded="xl"
+      />
+      <StatCard
+        label={t('errorsPage.endpoints')}
+        value={Object.keys(errorData.stats.byEndpoint).length}
+        size="lg"
+        rounded="xl"
+      />
     </div>
   )
 }

@@ -1,8 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { Button } from '@/app/components/Button'
+import { Card } from '@/app/components/Card'
+import { Badge } from '@/app/components/Badge'
+import { Loading } from '@/app/components/Loading'
+import { StatCard } from '@/app/components/StatCard'
+import { formatDate } from '@/app/lib/formatters'
 
 export function ErrorsTab() {
   const { t } = useLanguage()
@@ -41,28 +47,8 @@ export function ErrorsTab() {
     }
   }
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString()
-  }
-
-  const getTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      rate_limit: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-      network: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-      server: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-      validation_error: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
-      moderation_error: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
-      unknown: 'bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-400',
-    }
-    return colors[type] || colors.unknown
-  }
-
   if (loading && !errorData) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-6 h-6 animate-spin text-slate-400" />
-      </div>
-    )
+    return <Loading variant="spinner" layout="center" />
   }
 
   if (!errorData || errorData.total === 0) {
@@ -77,40 +63,44 @@ export function ErrorsTab() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="grid grid-cols-3 gap-4 flex-1">
-          <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl">
-            <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('errorsPage.totalErrors')}</div>
-            <div className="text-xl font-semibold text-slate-700 dark:text-slate-300">{errorData.total}</div>
-          </div>
-          <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl">
-            <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('errorsPage.errorTypes')}</div>
-            <div className="text-xl font-semibold text-slate-700 dark:text-slate-300">{Object.keys(errorData.stats?.byType || {}).length}</div>
-          </div>
-          <div className="p-3 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl">
-            <div className="text-xs text-slate-600 dark:text-slate-400 mb-1">{t('errorsPage.endpoints')}</div>
-            <div className="text-xl font-semibold text-slate-700 dark:text-slate-300">{Object.keys(errorData.stats?.byEndpoint || {}).length}</div>
-          </div>
+          <StatCard
+            label={t('errorsPage.totalErrors')}
+            value={errorData.total}
+            size="md"
+            rounded="xl"
+          />
+          <StatCard
+            label={t('errorsPage.errorTypes')}
+            value={Object.keys(errorData.stats?.byType || {}).length}
+            size="md"
+            rounded="xl"
+          />
+          <StatCard
+            label={t('errorsPage.endpoints')}
+            value={Object.keys(errorData.stats?.byEndpoint || {}).length}
+            size="md"
+            rounded="xl"
+          />
         </div>
-        <button
-          onClick={handleClear}
-          className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200 flex items-center gap-2"
-        >
+        <Button variant="danger" size="md" onClick={handleClear} className="rounded-xl">
           <Trash2 className="w-4 h-4" />
           {t('errorsPage.clear')}
-        </button>
+        </Button>
       </div>
 
       {errorData.errors && errorData.errors.length > 0 && (
         <div className="space-y-3 max-h-[500px] overflow-y-auto">
           {errorData.errors.map((error: any) => (
-            <div
+            <Card
               key={error.id}
-              className="p-4 bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border border-slate-200/50 dark:border-slate-700/50"
+              variant="bordered"
+              rounded="xl"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 text-xs rounded-lg ${getTypeColor(error.type || 'unknown')}`}>
+                  <Badge variant={error.type || 'unknown'} rounded="lg">
                     {error.type || 'unknown'}
-                  </span>
+                  </Badge>
                   {error.endpoint && (
                     <span className="text-xs text-slate-500 dark:text-slate-400">{error.endpoint}</span>
                   )}
@@ -128,7 +118,7 @@ export function ErrorsTab() {
                   </pre>
                 </details>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}

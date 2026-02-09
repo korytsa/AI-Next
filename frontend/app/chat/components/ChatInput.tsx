@@ -1,15 +1,22 @@
 import { Send, X, Mic, MicOff, FileText } from 'lucide-react'
 import { forwardRef, useEffect, useState } from 'react'
+import { useFormik } from 'formik'
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
 import { usePromptTemplates } from '../hooks/usePromptTemplates'
+import { Button } from '@/app/components/Button'
+import { Input } from '@/app/components/Input'
+import { TextArea } from '@/app/components/TextArea'
+import { Modal } from '@/app/components/Modal'
+import { Flex } from '@/app/components/Flex'
+import { Box } from '@/app/components/Box'
 
 const MAX_MESSAGE_LENGTH = 10000
 
 interface ChatInputProps {
   input: string
   setInput: (value: string) => void
-  onSubmit: (e: React.FormEvent) => void
+  onSubmit: (message: string) => void
   loading: boolean
   onCancel?: () => void
 }
@@ -19,8 +26,35 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     const { t, language } = useLanguage()
     const { saveTemplate } = usePromptTemplates()
     const [showSaveDialog, setShowSaveDialog] = useState(false)
-    const [templateName, setTemplateName] = useState('')
-    
+
+    const chatFormik = useFormik({
+      initialValues: { message: input },
+      enableReinitialize: true,
+      onSubmit: (values) => {
+        if (isListening) stopListening()
+        const text = (values.message ?? '').trim()
+        if (!text || loading) return
+        onSubmit(text)
+        chatFormik.resetForm({ values: { message: '' } })
+      },
+    })
+    const { values: chatValues, setFieldValue, handleSubmit, handleChange, resetForm: resetChatForm } = chatFormik
+    const messageValue = chatValues.message ?? ''
+
+    const saveTemplateFormik = useFormik({
+      initialValues: { templateName: '' },
+      onSubmit: (values) => {
+        const message = messageValue.trim()
+        if (!message) return
+        const name = (values.templateName ?? '').trim() || `Template ${Date.now()}`
+        if (saveTemplate(name, message)) {
+          saveTemplateFormik.resetForm()
+          setShowSaveDialog(false)
+        }
+      },
+    })
+    const { values: templateValues, handleChange: handleTemplateChange, handleSubmit: handleSaveTemplateSubmit, resetForm: resetSaveTemplate } = saveTemplateFormik
+
     const {
       isListening,
       isSupported,
@@ -30,206 +64,193 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       transcript,
     } = useSpeechRecognition(
       (text: string) => {
-        const newText = input ? `${input} ${text}` : text
+        const current = messageValue
+        const newText = current ? `${current} ${text}` : text
         if (newText.length <= MAX_MESSAGE_LENGTH) {
-          setInput(newText)
+          setFieldValue('message', newText)
         }
       },
       language
     )
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value
-      if (value.length <= MAX_MESSAGE_LENGTH) {
-        setInput(value)
-      }
-    }
+    useEffect(() => {
+      setInput(messageValue)
+    }, [messageValue, setInput])
 
     const handleVoiceToggle = () => {
-      if (isListening) {
-        stopListening()
-      } else {
-        startListening()
-      }
+      if (isListening) stopListening()
+      else startListening()
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
-      if (isListening) {
-        stopListening()
-      }
-      onSubmit(e)
+    const openSaveModal = () => {
+      resetSaveTemplate()
+      setShowSaveDialog(true)
     }
 
-    const handleSaveTemplate = () => {
-      if (!input.trim()) return
-      
-      const name = templateName.trim() || `Template ${Date.now()}`
-      if (saveTemplate(name, input)) {
-        setShowSaveDialog(false)
-        setTemplateName('')
-      }
+    const closeSaveModal = () => {
+      setShowSaveDialog(false)
+      resetSaveTemplate()
     }
 
-    const remainingChars = MAX_MESSAGE_LENGTH - input.length
+    const remainingChars = MAX_MESSAGE_LENGTH - messageValue.length
     const isNearLimit = remainingChars < 100
+    const messageTrimmed = messageValue.trim()
 
     return (
       <>
-        {showSaveDialog && (
-          <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-soft-xl border border-slate-200/50 dark:border-slate-700/50 p-6 min-w-[400px] max-w-md">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">{t('templates.saveTemplate')}</h3>
-                <button
-                  onClick={() => {
-                    setShowSaveDialog(false)
-                    setTemplateName('')
-                  }}
-                  className="p-2 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 rounded-xl transition-all duration-200"
-                >
-                  <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                </button>
-              </div>
-              <input
-                type="text"
-                value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
-                placeholder={t('templates.namePlaceholder')}
-                className="w-full px-4 py-3 text-sm border border-slate-200/50 dark:border-slate-700/50 rounded-2xl mb-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 shadow-soft"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleSaveTemplate()
-                  } else if (e.key === 'Escape') {
-                    setShowSaveDialog(false)
-                    setTemplateName('')
-                  }
-                }}
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSaveTemplate}
-                  className="flex-1 px-4 py-2.5 text-sm bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all duration-200 shadow-soft hover:shadow-soft-lg"
-                >
-                  {t('templates.save')}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowSaveDialog(false)
-                    setTemplateName('')
-                  }}
-                  className="px-4 py-2.5 text-sm bg-slate-200/80 dark:bg-slate-700/80 rounded-2xl hover:bg-slate-300/80 dark:hover:bg-slate-600/80 transition-all duration-200"
-                >
-                  {t('chat.cancel')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm p-6">
-          <div className="flex flex-col gap-3 max-w-4xl mx-auto">
-            <div className="flex gap-3 items-end">
-              <div className="flex-1 relative">
-              <textarea
-                ref={ref}
-                value={input}
-                onChange={handleInputChange}
-                placeholder={t('chat.placeholder')}
-                maxLength={MAX_MESSAGE_LENGTH}
-                rows={3}
-                className="w-full px-5 py-3 pr-14 border border-slate-200/50 dark:border-slate-700/50 rounded-3xl focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm resize-none overflow-y-auto shadow-soft transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                disabled={loading}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    if (!loading && input.trim()) {
-                      if (isListening) {
-                        stopListening()
-                      }
-                      onSubmit(e as any)
-                    }
-                  }
-                }}
-              />
-              {isSupported && (
-                <button
-                  type="button"
-                  onClick={handleVoiceToggle}
-                  disabled={loading}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-2xl transition-all duration-200 shadow-soft ${
-                    isListening
-                      ? 'bg-gradient-to-br from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 shadow-soft-lg'
-                      : 'bg-slate-100/80 dark:bg-slate-700/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-600/80'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title={isListening ? t('chat.stopListening') : t('chat.startListening')}
-                >
-                  {isListening ? (
-                    <MicOff className="w-5 h-5" />
-                  ) : (
-                    <Mic className="w-5 h-5" />
-                  )}
-                </button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
+        <Modal open={showSaveDialog} onClose={closeSaveModal} title={t('templates.saveTemplate')}>
+          <form onSubmit={handleSaveTemplateSubmit}>
+            <Input
+              type="text"
+              name="templateName"
+              value={templateValues.templateName}
+              onChange={handleTemplateChange}
+              placeholder={t('templates.namePlaceholder')}
+              size="md"
+              className="mb-4"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  saveTemplateFormik.handleSubmit()
+                } else if (e.key === 'Escape') {
+                  closeSaveModal()
+                }
+              }}
+            />
+            <Flex gap={3}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                className="flex-1 py-2.5 shadow-soft hover:shadow-soft-lg"
+              >
+                {t('templates.save')}
+              </Button>
+              <Button
                 type="button"
-                onClick={() => setShowSaveDialog(true)}
-                disabled={loading || !input.trim()}
-                className="px-4 py-3 bg-gradient-to-br from-green-500 to-emerald-500 text-white rounded-3xl hover:from-green-600 hover:to-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-soft-lg hover:shadow-soft-xl transition-all duration-200"
+                variant="secondary"
+                size="md"
+                onClick={closeSaveModal}
+                className="py-2.5"
+              >
+                {t('chat.cancel')}
+              </Button>
+            </Flex>
+          </form>
+        </Modal>
+
+        <form
+          onSubmit={handleSubmit}
+          className="border-t border-slate-200/50 dark:border-slate-800/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm p-6"
+        >
+          <Flex direction="col" gap={3} className="max-w-4xl mx-auto">
+            <Flex gap={3} align="end">
+              <Box className="flex-1 relative">
+                <TextArea
+                  ref={ref}
+                  name="message"
+                  value={messageValue}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    if (value.length <= MAX_MESSAGE_LENGTH) {
+                      handleChange(e)
+                    }
+                  }}
+                  placeholder={t('chat.placeholder')}
+                  maxLength={MAX_MESSAGE_LENGTH}
+                  rows={3}
+                  className="pr-14"
+                  disabled={loading}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      if (!loading && messageTrimmed) {
+                        if (isListening) stopListening()
+                        handleSubmit(e as any)
+                      }
+                    }
+                  }}
+                />
+                {isSupported && (
+                  <Button
+                    type="button"
+                    variant={isListening ? 'dangerGradient' : 'secondary'}
+                    size="iconMd"
+                    onClick={handleVoiceToggle}
+                    disabled={loading}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 shadow-soft ${isListening ? 'shadow-soft-lg' : ''}`}
+                    title={isListening ? t('chat.stopListening') : t('chat.startListening')}
+                  >
+                    {isListening ? (
+                      <MicOff className="w-5 h-5" />
+                    ) : (
+                      <Mic className="w-5 h-5" />
+                    )}
+                  </Button>
+                )}
+              </Box>
+              <Flex direction="col" gap={2} className="shrink-0">
+                <Button
+                type="button"
+                variant="success"
+                size="lg"
+                onClick={openSaveModal}
+                disabled={loading || !messageTrimmed}
                 title={t('templates.save')}
               >
                 <FileText className="w-5 h-5" />
-              </button>
+              </Button>
               {loading && onCancel ? (
-                <button
+                <Button
                   type="button"
+                  variant="dangerGradient"
+                  size="lg"
                   onClick={onCancel}
-                  className="px-6 py-3 bg-gradient-to-br from-red-500 to-pink-500 text-white rounded-3xl hover:from-red-600 hover:to-pink-600 flex items-center gap-2 shadow-soft-lg hover:shadow-soft-xl transition-all duration-200"
                 >
                   <X className="w-5 h-5" />
                   {t('chat.cancel')}
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
                   type="submit"
-                  disabled={loading || !input.trim()}
-                  className="px-6 py-3 bg-gradient-to-br from-indigo-500 to-purple-500 text-white rounded-3xl hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-soft-lg hover:shadow-soft-xl transition-all duration-200"
+                  variant="primary"
+                  size="lg"
+                  disabled={loading || !messageTrimmed}
                 >
                   <Send className="w-5 h-5" />
                   {t('chat.send')}
-                </button>
+                </Button>
               )}
-            </div>
-          </div>
+              </Flex>
+            </Flex>
+          </Flex>
           {isListening && (
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+            <Flex direction="col" gap={1}>
+              <Flex align="center" gap={2} className="text-sm text-blue-600 dark:text-blue-400">
+                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 <span>{t('chat.listening')}</span>
-              </div>
+              </Flex>
               {transcript && (
                 <div className="text-xs text-gray-500 dark:text-gray-400 italic">
                   {transcript}
                 </div>
               )}
-            </div>
+            </Flex>
           )}
           {voiceError && (
-            <div className="text-sm text-red-500 dark:text-red-400">
-              {voiceError}
-            </div>
+            <div className="text-sm text-red-500 dark:text-red-400">{voiceError}</div>
           )}
           {isNearLimit && (
-            <p className={`text-xs text-right ${remainingChars < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+            <p
+              className={`text-xs text-right ${remainingChars < 0 ? 'text-red-500' : 'text-gray-500'}`}
+            >
               {remainingChars} {t('chat.charactersRemaining')}
             </p>
           )}
-        </div>
-      </form>
-      </>
-    )
+        </form>
+    </>
+  )
   }
 )
 

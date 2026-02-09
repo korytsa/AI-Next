@@ -1,6 +1,8 @@
 import { useState, useEffect, KeyboardEvent } from 'react'
 import { User, Edit2, Check, X } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { Button } from '@/app/components/Button'
+import { Input } from '@/app/components/Input'
 
 interface UserNameBadgeProps {
   userName?: string | null
@@ -48,41 +50,48 @@ export function UserNameBadge({ userName, onChangeName }: UserNameBadgeProps) {
       <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
       {isEditingName ? (
         <div className="flex items-center gap-1">
-          <input
+          <Input
             type="text"
             value={editedName}
             onChange={(e) => setEditedName(e.target.value)}
             onKeyDown={handleKeyDown}
             onBlur={handleSaveName}
-            className="text-sm font-medium text-blue-600 dark:text-blue-400 bg-transparent border-b border-blue-400 focus:outline-none focus:border-blue-600 px-1 min-w-[60px]"
+            variant="inline"
+            className="px-1"
             autoFocus
           />
-          <button
+          <Button
+            variant="ghost"
+            size="iconTiny"
             onClick={handleSaveName}
-            className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
+            className="hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
             title={t('chat.save')}
           >
             <Check className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="iconTiny"
             onClick={handleCancelEdit}
-            className="p-0.5 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
+            className="hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
             title={t('chat.cancel')}
           >
             <X className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-          </button>
+          </Button>
         </div>
       ) : (
         <>
           <span className="text-sm font-medium text-blue-600 dark:text-blue-400">{userName || 'user'}</span>
           {onChangeName && (
-            <button
+            <Button
+              variant="ghost"
+              size="iconTiny"
               onClick={handleStartEdit}
               className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg"
               title={t('chat.changeName')}
             >
               <Edit2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-            </button>
+            </Button>
           )}
         </>
       )}

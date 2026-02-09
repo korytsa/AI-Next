@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher'
+import { Button } from '@/app/components/Button'
+import { Heading } from '@/app/components/Heading'
 
 interface ErrorsHeaderProps {
   onRefresh: () => void
@@ -23,24 +25,18 @@ export function ErrorsHeader({ onRefresh, onClear }: ErrorsHeaderProps) {
         </Link>
         <div className="flex items-center gap-3">
           <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
-          <h1 className="text-3xl font-bold">{t('errorsPage.title')}</h1>
+          <Heading as="h1" size="3xl" weight="bold" color="inherit">{t('errorsPage.title')}</Heading>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button
-          onClick={onRefresh}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
+        <Button variant="blue" size="md" onClick={onRefresh} className="rounded-lg">
           <RefreshCw className="w-4 h-4" />
           {t('errorsPage.refresh')}
-        </button>
-        <button
-          onClick={onClear}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-        >
+        </Button>
+        <Button variant="dangerFilled" size="md" onClick={onClear} className="rounded-lg">
           <Trash2 className="w-4 h-4" />
           {t('errorsPage.clear')}
-        </button>
+        </Button>
         <LanguageSwitcher />
       </div>
     </div>

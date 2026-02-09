@@ -1,13 +1,14 @@
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { ErrorEntry } from '../hooks/useErrors'
+import { Heading } from '@/app/components/Heading'
+import { Badge } from '@/app/components/Badge'
 
 interface ErrorCardProps {
   error: ErrorEntry
   formatDate: (timestamp: number) => string
-  getTypeColor: (type: string) => string
 }
 
-export function ErrorCard({ error, formatDate, getTypeColor }: ErrorCardProps) {
+export function ErrorCard({ error, formatDate }: ErrorCardProps) {
   const { t } = useLanguage()
 
   return (
@@ -15,23 +16,17 @@ export function ErrorCard({ error, formatDate, getTypeColor }: ErrorCardProps) {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeColor(error.type)}`}>
-              {error.type}
-            </span>
+            <Badge variant={error.type}>{error.type}</Badge>
             {error.statusCode && (
-              <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700">
-                {error.statusCode}
-              </span>
+              <Badge variant="neutral">{error.statusCode}</Badge>
             )}
             {error.endpoint && (
-              <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700">
-                {error.method} {error.endpoint}
-              </span>
+              <Badge variant="neutral">{error.method} {error.endpoint}</Badge>
             )}
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          <Heading as="h3" size="lg" weight="semibold" className="mb-2 text-gray-900 dark:text-gray-100">
             {error.message}
-          </h3>
+          </Heading>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {formatDate(error.timestamp)}
           </p>

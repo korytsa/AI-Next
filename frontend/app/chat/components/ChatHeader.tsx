@@ -5,6 +5,11 @@ import { UserNameBadge } from './UserNameBadge'
 import { ChatSettingsDrawer } from './ChatSettingsDrawer'
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { LanguageSwitcher } from '@/app/components/LanguageSwitcher'
+import { Button } from '@/app/components/Button'
+import { Input } from '@/app/components/Input'
+import { Heading } from '@/app/components/Heading'
+import { Flex } from '@/app/components/Flex'
+import { formatNumber } from '@/app/lib/formatters'
 
 interface ChatHeaderProps {
   useStreaming: boolean
@@ -41,53 +46,56 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
   return (
     <>
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 shadow-soft">
-        <div className="pl-0.5 pr-16 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="pl-4"></div>
-          <h1 className="text-2xl font-bold">{t('chat.title')}</h1>
+        <Flex align="center" justify="between" className="pl-0.5 pr-16 py-5">
+        <Flex align="center" gap={4}>
+          <div className="pl-4" />
+          <Heading as="h1" size="2xl" weight="bold" color="inherit">{t('chat.title')}</Heading>
           <UserNameBadge userName={userName} onChangeName={onEditName} />
-        </div>
-        <div className="flex items-center gap-4">
+        </Flex>
+        <Flex align="center" gap={4}>
         {totalTokens !== undefined && totalTokens > 0 && (
             <div className="px-4 py-2 bg-slate-100/80 dark:bg-slate-800/80 rounded-2xl shadow-soft backdrop-blur-sm">
               <span className="text-sm text-slate-600 dark:text-slate-400">
-                {t('metrics.tokens')}: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{totalTokens.toLocaleString()}</span>
+                {t('metrics.tokens')}: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{formatNumber(totalTokens)}</span>
               </span>
             </div>
           )}
           {onSetSearchQuery && (
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onSetSearchQuery(e.target.value)}
                 placeholder={t('settings.searchPlaceholder')}
-                className="pl-9 pr-4 py-2 text-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50 shadow-soft transition-all duration-200"
+                size="smWithLeftIcon"
               />
             </div>
           )}
-          <button
+          <Button
             type="button"
+            variant="danger"
+            size="md"
             onClick={onClearHistory}
             disabled={loading}
-            className="px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
+            className="shadow-soft hover:shadow-soft-lg"
             title={t('chat.clearHistory')}
           >
             <Trash2 className="w-4 h-4" />
             {t('chat.clearHistory')}
-          </button>
+          </Button>
           <LanguageSwitcher />
-          <button
+          <Button
             type="button"
+            variant="icon"
+            size="iconMd"
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2.5 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 rounded-2xl transition-all duration-200 shadow-soft hover:shadow-soft-lg relative"
             title={t('settings.title')}
           >
-            <Settings className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-          </button>
-        </div>
-        </div>
+            <Settings className="w-5 h-5" />
+          </Button>
+        </Flex>
+        </Flex>
       </div>
       <ChatSettingsDrawer
         isOpen={isSettingsOpen}

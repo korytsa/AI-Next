@@ -97,11 +97,10 @@ export function useChat() {
     }
   }, [useCache, useStreaming])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || loading) return
+  const handleSubmit = async (message: string) => {
+    if (!message.trim() || loading) return
 
-    const sanitizedContent = sanitizeText(input, {
+    const sanitizedContent = sanitizeText(message, {
       removeHtml: true,
       normalizeWhitespace: true,
       removeControlChars: true,

@@ -2,6 +2,7 @@
 
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { Globe } from 'lucide-react'
+import { Button } from '@/app/components/Button'
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()
@@ -11,13 +12,15 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <button
+    <Button
+      variant="language"
+      size="sm"
       onClick={toggleLanguage}
-      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+      className="font-medium rounded-md"
       title={language === 'en' ? 'Switch to Russian' : 'Переключить на английский'}
     >
       <Globe className="w-4 h-4" />
       <span className="uppercase">{language}</span>
-    </button>
+    </Button>
   )
 }

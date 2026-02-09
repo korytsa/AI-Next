@@ -3,6 +3,7 @@ import remarkGfm from 'remark-gfm'
 import { Message } from '../types'
 import { RotateCcw, Square } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { Button } from '@/app/components/Button'
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis'
 import React, { useEffect, useRef } from 'react'
 
@@ -234,13 +235,15 @@ export function MessageBubble({ message, onRetry, searchQuery = '', autoPlayVoic
               </div>
             </div>
             {isRetryable && onRetry && (
-              <button
+              <Button
+                variant="dangerSoft"
+                size="md"
                 onClick={onRetry}
-                className="mt-2 px-4 py-2 text-sm bg-red-100/80 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-2xl hover:bg-red-200/80 dark:hover:bg-red-900/60 transition-all duration-200 flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
+                className="mt-2"
               >
                 <RotateCcw className="w-4 h-4" />
                 {t('chat.retry')}
-              </button>
+              </Button>
             )}
           </div>
         ) : message.role === 'assistant' ? (
@@ -254,13 +257,15 @@ export function MessageBubble({ message, onRetry, searchQuery = '', autoPlayVoic
           </ReactMarkdown>
             </div>
             {isSpeaking && isSupported && !hasError && (
-              <button
+              <Button
+                variant="icon"
+                size="iconMd"
                 onClick={stop}
-                className="flex-shrink-0 p-2 rounded-2xl hover:bg-slate-100/80 dark:hover:bg-slate-700/80 transition-all duration-200 shadow-soft"
+                className="flex-shrink-0"
                 title={t('chat.stopVoice')}
               >
                 <Square className="w-4 h-4 text-red-600 dark:text-red-400" />
-              </button>
+              </Button>
             )}
           </div>
         ) : (
