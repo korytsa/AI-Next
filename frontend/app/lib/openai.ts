@@ -1,16 +1,8 @@
 import OpenAI from 'openai'
-import { getApiKeyFromEnv } from './api-key-security'
 import { DEFAULT_MODEL_ID } from './models'
-import { ErrorMessage, ApiString } from './app-strings'
+import { ApiString } from './app-strings'
 
-let groqApiKey: string | null = null
-
-try {
-  groqApiKey = getApiKeyFromEnv()
-} catch (error: any) {
-  const errorMessage = error?.message || ErrorMessage.Unknown
-  throw new Error(ApiString.FailedToLoadApiKey(errorMessage))
-}
+const groqApiKey = process.env.GROQ_API_KEY?.trim() || null
 
 if (!groqApiKey) {
   throw new Error(ApiString.GroqKeyNotSet)

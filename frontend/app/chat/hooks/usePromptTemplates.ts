@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { getJsonFromStorage, saveJsonToStorage } from '@/app/lib/storage'
 
 export interface PromptTemplate {
@@ -11,15 +11,14 @@ export interface PromptTemplate {
 const STORAGE_KEY = 'prompt-templates'
 const MAX_TEMPLATES = 20
 
-export function usePromptTemplates() {
-  const [templates, setTemplates] = useState<PromptTemplate[]>([])
+function getInitialTemplates(): PromptTemplate[] {
+  if (typeof window === 'undefined') return []
+  const stored = getJsonFromStorage<PromptTemplate[]>(STORAGE_KEY, [])
+  return Array.isArray(stored) && stored.length > 0 ? stored : []
+}
 
-  useEffect(() => {
-    const stored = getJsonFromStorage<PromptTemplate[]>(STORAGE_KEY, [])
-    if (Array.isArray(stored) && stored.length > 0) {
-      setTemplates(stored)
-    }
-  }, [])
+export function usePromptTemplates() {
+  const [templates, setTemplates] = useState<PromptTemplate[]>(getInitialTemplates)
 
   const saveTemplate = (name: string, content: string) => {
     if (!content.trim() || !name.trim()) return false
