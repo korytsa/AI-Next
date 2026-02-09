@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { useFetch, useFetchMutation } from '@/app/hooks/useFetch'
 import { Button } from '@/app/components/Button'
 import { Card } from '@/app/components/Card'
 import { Badge } from '@/app/components/Badge'
@@ -10,40 +10,24 @@ import { Loading } from '@/app/components/Loading'
 import { StatCard } from '@/app/components/StatCard'
 import { formatDate } from '@/app/lib/formatters'
 
+const EMPTY_ERROR_DATA = {
+  errors: [],
+  stats: { total: 0, byType: {}, byEndpoint: {} },
+  total: 0,
+}
+
 export function ErrorsTab() {
   const { t } = useLanguage()
-  const [errorData, setErrorData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchErrors = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch('/api/errors')
-        if (response.ok) {
-          const data = await response.json()
-          setErrorData(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch errors:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchErrors()
-    const interval = setInterval(fetchErrors, 5000)
-    return () => clearInterval(interval)
-  }, [])
+  const { data: errorData, loading, setData: setErrorData } = useFetch<any>('/api/errors', {
+    refetchInterval: 5000,
+  })
+  const { execute: executeClear } = useFetchMutation()
 
   const handleClear = async () => {
     if (!confirm(t('errorsPage.clearConfirm'))) return
-    try {
-      const response = await fetch('/api/errors', { method: 'DELETE' })
-      if (response.ok) {
-        setErrorData({ errors: [], stats: { total: 0, byType: {}, byEndpoint: {} }, total: 0 })
-      }
-    } catch (error) {
-      console.error('Failed to clear errors:', error)
+    const response = await executeClear('/api/errors', { method: 'DELETE' })
+    if (response?.ok) {
+      setErrorData(EMPTY_ERROR_DATA)
     }
   }
 

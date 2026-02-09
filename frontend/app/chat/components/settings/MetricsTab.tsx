@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Activity, TrendingUp, DollarSign, Trash2 } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
+import { useFetch, useFetchMutation } from '@/app/hooks/useFetch'
 import { Button } from '@/app/components/Button'
 import { Card } from '@/app/components/Card'
 import { Heading } from '@/app/components/Heading'
@@ -14,38 +15,17 @@ import { formatNumber, formatCost } from '@/app/lib/formatters'
 export function MetricsTab() {
   const { t } = useLanguage()
   const [period, setPeriod] = useState<'today' | 'week' | 'month' | 'all'>('today')
-  const [metrics, setMetrics] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      setLoading(true)
-      try {
-        const response = await fetch(`/api/metrics?period=${period}`)
-        if (response.ok) {
-          const data = await response.json()
-          setMetrics(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch metrics:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchMetrics()
-    const interval = setInterval(fetchMetrics, 5000)
-    return () => clearInterval(interval)
-  }, [period])
+  const { data: metrics, loading, setData: setMetrics } = useFetch<any>(
+    `/api/metrics?period=${period}`,
+    { refetchInterval: 5000 }
+  )
+  const { execute: executeClear } = useFetchMutation()
 
   const handleClear = async () => {
     if (!confirm(t('metrics.clearConfirm'))) return
-    try {
-      const response = await fetch('/api/metrics', { method: 'DELETE' })
-      if (response.ok) {
-        setMetrics(null)
-      }
-    } catch (error) {
-      console.error('Failed to clear metrics:', error)
+    const response = await executeClear('/api/metrics', { method: 'DELETE' })
+    if (response?.ok) {
+      setMetrics(null)
     }
   }
 

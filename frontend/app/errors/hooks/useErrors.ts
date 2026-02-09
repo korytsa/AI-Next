@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useFetch, useFetchMutation } from '@/app/hooks/useFetch'
 import { formatDate } from '@/app/lib/formatters'
 
 export interface ErrorEntry {
@@ -26,45 +26,23 @@ export interface ErrorData {
 }
 
 export function useErrors() {
-  const [errorData, setErrorData] = useState<ErrorData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchErrors = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/errors')
-      if (response.ok) {
-        const data = await response.json()
-        setErrorData(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch errors:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchErrors()
-    const interval = setInterval(fetchErrors, 5000)
-    return () => clearInterval(interval)
-  }, [fetchErrors])
+  const { data: errorData, loading, refetch, setData: setErrorData } = useFetch<ErrorData>(
+    '/api/errors',
+    { refetchInterval: 5000 }
+  )
+  const { execute: executeClear } = useFetchMutation()
 
   const handleClearErrors = async () => {
-    try {
-      const response = await fetch('/api/errors', { method: 'DELETE' })
-      if (response.ok) {
-        fetchErrors()
-      }
-    } catch (error) {
-      console.error('Failed to clear errors:', error)
+    const response = await executeClear('/api/errors', { method: 'DELETE' })
+    if (response?.ok) {
+      refetch()
     }
   }
 
   return {
     errorData,
     loading,
-    fetchErrors,
+    fetchErrors: refetch,
     handleClearErrors,
     formatDate,
   }
