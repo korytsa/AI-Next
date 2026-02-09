@@ -1,5 +1,5 @@
 import { Send, X, Mic, MicOff, FileText } from 'lucide-react'
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { useFormik } from 'formik'
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition'
@@ -40,6 +40,8 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     })
     const { values: chatValues, setFieldValue, handleSubmit, handleChange, resetForm: resetChatForm } = chatFormik
     const messageValue = chatValues.message ?? ''
+    const messageRef = useRef(messageValue)
+    messageRef.current = messageValue
 
     const saveTemplateFormik = useFormik({
       initialValues: { templateName: '' },
@@ -64,8 +66,8 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       transcript,
     } = useSpeechRecognition(
       (text: string) => {
-        const current = messageValue
-        const newText = current ? `${current} ${text}` : text
+        const current = messageRef.current
+        const newText = current ? `${current} ${text}`.trim() : text
         if (newText.length <= MAX_MESSAGE_LENGTH) {
           setFieldValue('message', newText)
         }

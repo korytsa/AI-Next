@@ -25,6 +25,8 @@ export function useSpeechRecognition(
   const [error, setError] = useState<string | null>(null)
   const [transcript, setTranscript] = useState('')
   const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const onResultRef = useRef(onResult)
+  onResultRef.current = onResult
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -65,7 +67,7 @@ export function useSpeechRecognition(
       if (finalText) {
         const trimmed = finalText.trim()
         setTranscript(trimmed)
-        onResult(trimmed)
+        onResultRef.current(trimmed)
       } else if (interimText) {
         setTranscript(interimText)
       }
@@ -84,7 +86,7 @@ export function useSpeechRecognition(
       recognitionRef.current?.stop()
       recognitionRef.current = null
     }
-  }, [onResult, language])
+  }, [language])
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || isListening) return
