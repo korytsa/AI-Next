@@ -1,4 +1,5 @@
 import { getErrorStatus, getRetryAfter, getErrorMessage } from './api-utils'
+import { ErrorType } from './app-strings'
 import { recordMetric } from './metrics'
 import { trackError } from './error-tracker'
 
@@ -37,7 +38,7 @@ export function createErrorResponseData(error: any, status: number, defaultMessa
   
   const errorData: any = {
     error: errorMessage,
-    type: status === 429 ? 'rate_limit' : 'server',
+    type: status === 429 ? ErrorType.RateLimit : ErrorType.Server,
   }
   
   if (retryAfter) errorData.retryAfter = retryAfter

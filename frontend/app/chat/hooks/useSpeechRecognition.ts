@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { SpeechError } from '@/app/lib/app-strings'
 
 interface SpeechRecognitionHook {
   isListening: boolean
@@ -10,10 +11,10 @@ interface SpeechRecognitionHook {
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  'no-speech': 'No speech detected. Please try again.',
-  'audio-capture': 'No microphone found. Please check your microphone.',
-  'not-allowed': 'Microphone permission denied. Please allow microphone access.',
-  'network': 'Network error. Please check your connection.',
+  'no-speech': SpeechError.NoSpeech,
+  'audio-capture': SpeechError.AudioCapture,
+  'not-allowed': SpeechError.NotAllowed,
+  network: SpeechError.Network,
 }
 
 export function useSpeechRecognition(
@@ -34,7 +35,7 @@ export function useSpeechRecognition(
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition
     
     if (!SpeechRecognition) {
-      setError('Speech recognition is not supported in your browser')
+      setError(SpeechError.NotSupported)
       return
     }
 
@@ -74,7 +75,7 @@ export function useSpeechRecognition(
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setError(ERROR_MESSAGES[event.error] || `Speech recognition error: ${event.error}`)
+      setError(ERROR_MESSAGES[event.error] || SpeechError.Generic(event.error))
       setIsListening(false)
     }
 
@@ -95,7 +96,7 @@ export function useSpeechRecognition(
       recognitionRef.current.lang = language === 'ru' ? 'ru-RU' : 'en-US'
       recognitionRef.current.start()
     } catch {
-      setError('Failed to start speech recognition')
+      setError(SpeechError.FailedToStart)
     }
   }, [isListening, language])
 

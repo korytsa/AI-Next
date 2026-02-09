@@ -1,49 +1,42 @@
 import { openai, DEFAULT_MODEL, DEFAULT_TEMPERATURE, DEFAULT_MAX_TOKENS } from './openai'
-import { 
-  SHORT_RESPONSE_EXAMPLES, 
-  DETAILED_RESPONSE_EXAMPLES,
-  getFewShotPrompt 
-} from './few-shot-examples'
+import { SHORT_RESPONSE_EXAMPLES, DETAILED_RESPONSE_EXAMPLES, getFewShotPrompt } from './few-shot-examples'
 import { getChainOfThoughtPrompt, ChainOfThoughtMode } from './chain-of-thought'
 import { trimMessages, trimAndSummarizeMessages, TrimmingOptions } from './message-trimming'
 import { retrieveContext } from './rag'
+import { SystemPrompt, RagPrompt } from './prompts'
 
 export type ResponseMode = 'short' | 'detailed'
 
 export function getSystemMessage(
-  userName?: string | null, 
-  responseMode: ResponseMode = 'detailed', 
+  userName?: string | null,
+  responseMode: ResponseMode = 'detailed',
   useFewShot: boolean = true,
   chainOfThought: ChainOfThoughtMode = 'none'
 ) {
-  let baseContent = 'You are a fun, friendly, and easygoing friend. Be cheerful, lighthearted, and entertaining. Use casual language, jokes, and emojis when appropriate. Keep the conversation fun and engaging while still being helpful.\n\nIMPORTANT: Always respond in the same language as the user\'s message. If the user writes in Russian, respond in Russian. If the user writes in English, respond in English. Match the language of each user message.'
-  
+  let baseContent = `${SystemPrompt.Base}\n\n${SystemPrompt.LanguageRule}`
+
   if (chainOfThought !== 'none') {
     const cotPrompt = getChainOfThoughtPrompt(chainOfThought)
     if (cotPrompt) {
       baseContent += `\n\n${cotPrompt}`
     }
   } else {
-    if (responseMode === 'short') {
-      baseContent += ' Provide concise, brief answers. Keep responses short and to the point, typically 1-3 sentences. Avoid lengthy explanations unless specifically requested.'
-    } else {
-      baseContent += ' Provide detailed, comprehensive answers. Include examples, explanations, and context when helpful. Elaborate on concepts to ensure thorough understanding.'
-    }
+    baseContent += responseMode === 'short' ? SystemPrompt.ShortMode : SystemPrompt.DetailedMode
   }
-  
+
   if (useFewShot) {
     const examples = responseMode === 'short' ? SHORT_RESPONSE_EXAMPLES : DETAILED_RESPONSE_EXAMPLES
     const fewShotPrompt = getFewShotPrompt(examples)
     baseContent += `\n\n${fewShotPrompt}`
   }
-  
+
   if (userName) {
     return {
       role: 'system' as const,
-      content: `${baseContent} The user's name is ${userName}. Address them by name when appropriate to make the conversation more personal and friendly.`,
+      content: `${baseContent}${SystemPrompt.UserNameSuffix(userName)}`,
     }
   }
-  
+
   return {
     role: 'system' as const,
     content: baseContent,
@@ -76,8 +69,7 @@ export async function prepareMessages(
       const ragContext = await retrieveContext(lastUserMessage.content, ragMaxDocuments)
       
       if (ragContext.enabled && ragContext.formattedContext) {
-        const ragInstruction = '\n\n⚠️ RAG MODE ACTIVE: When knowledge base context is provided below, you MUST prioritize it over your general knowledge. Use the exact information from the knowledge base.\n'
-        systemMessage.content = `${systemMessage.content}${ragInstruction}\n${ragContext.formattedContext}`
+        systemMessage.content = `${systemMessage.content}${RagPrompt.Instruction}\n${ragContext.formattedContext}`
       }
     }
   }

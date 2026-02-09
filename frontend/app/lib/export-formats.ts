@@ -1,4 +1,5 @@
 import { Message } from '../chat/types'
+import { ApiString } from '@/app/lib/app-strings'
 
 export type ExportFormat = 'txt' | 'markdown' | 'json' | 'pdf'
 
@@ -52,7 +53,7 @@ export function exportToPdf(messages: Message[]): void {
   const printWindow = window.open('', '_blank')
   
   if (!printWindow) {
-    alert('Please allow popups to export as PDF')
+    alert(ApiString.ExportPdfPopup)
     return
   }
   

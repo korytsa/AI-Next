@@ -1,5 +1,6 @@
 import { openai, DEFAULT_MODEL } from './openai'
 import { Message } from './message-trimming'
+import { SummarizationPrompt } from './prompts'
 
 export interface SummarizationOptions {
   maxSummaryTokens?: number
@@ -25,31 +26,15 @@ export async function summarizeMessages(
     .join('\n\n')
 
   const prompt = preserveKeyInfo
-    ? `Create a concise summary of the following conversation. Preserve important details like names, dates, decisions, and key topics. Keep it under ${maxSummaryTokens} tokens.
-
-Conversation:
-${conversationText}
-
-Summary:`
-    : `Create a brief summary of the following conversation. Keep it under ${maxSummaryTokens} tokens.
-
-Conversation:
-${conversationText}
-
-Summary:`
+    ? `${SummarizationPrompt.WithKeyInfo(maxSummaryTokens)}${conversationText}${SummarizationPrompt.SummarySuffix}`
+    : `${SummarizationPrompt.Brief(maxSummaryTokens)}${conversationText}${SummarizationPrompt.SummarySuffix}`
 
   try {
     const completion = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
       messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful assistant that creates concise summaries of conversations.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
+        { role: 'system', content: SummarizationPrompt.SystemRole },
+        { role: 'user', content: prompt },
       ],
       temperature: 0.3,
       max_tokens: maxSummaryTokens,
@@ -58,7 +43,7 @@ Summary:`
     return completion.choices[0]?.message?.content || ''
   } catch (error) {
     console.error('Error summarizing messages:', error)
-    return `[Previous conversation: ${messages.length} messages]`
+    return SummarizationPrompt.Fallback(messages.length)
   }
 }
 

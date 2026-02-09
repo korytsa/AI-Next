@@ -1,4 +1,5 @@
 import { searchMockDocuments, type SearchResult } from '@/app/lib/rag-data'
+import { RagPrompt } from '@/app/lib/prompts'
 
 export interface RAGContext {
   documents: SearchResult[]
@@ -9,18 +10,17 @@ export interface RAGContext {
 function formatContextForAI(results: SearchResult[]): string {
   if (results.length === 0) return ''
 
-  let context = '\n\n=== KNOWLEDGE BASE - EXACT INFORMATION TO USE ===\n\n'
+  let context = RagPrompt.SectionStart
 
   results.forEach((result, index) => {
     const doc = result.document
-    const title = doc.metadata?.title || `Document ${index + 1}`
-    
-    context += `[Document ${index + 1}] ${title}\n`
-    context += `Content: ${doc.content}\n\n`
+    const title = doc.metadata?.title || RagPrompt.DocumentTitle(index)
+    context += RagPrompt.DocumentLine(index, title)
+    context += RagPrompt.ContentLine(doc.content)
   })
 
-  context += '=== END OF KNOWLEDGE BASE ===\n\n'
-  context += 'Use the EXACT information from the knowledge base above to answer. Do not rephrase - use it as provided. Only use your general knowledge if the knowledge base doesn\'t contain relevant information.\n'
+  context += RagPrompt.SectionEnd
+  context += RagPrompt.UsageRule
 
   return context
 }

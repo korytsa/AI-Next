@@ -1,3 +1,5 @@
+import { ModerationMessage } from './app-strings'
+
 export interface ModerationResult {
   isSafe: boolean
   categories: string[]
@@ -44,7 +46,7 @@ function checkToxicity(text: string): { isToxic: boolean; reasons: string[] } {
   
   for (const pattern of profanityPatterns) {
     if (pattern.test(text)) {
-      reasons.push('Your message contains inappropriate language')
+      reasons.push(ModerationMessage.InappropriateLanguage)
       return { isToxic: true, reasons }
     }
   }
@@ -57,7 +59,7 @@ function checkPersonalInfo(text: string): { hasPersonalInfo: boolean; reasons: s
   
   for (const pattern of PERSONAL_INFO_PATTERNS) {
     if (pattern.test(text)) {
-      reasons.push('Your message may contain sensitive personal information. Please do not share credit card numbers, social security numbers, or passwords.')
+      reasons.push(ModerationMessage.SensitiveInfo)
       return { hasPersonalInfo: true, reasons }
     }
   }
@@ -70,7 +72,7 @@ function checkSpam(text: string): { isSpam: boolean; reasons: string[] } {
   
   for (const pattern of SPAM_PATTERNS) {
     if (pattern.test(text)) {
-      reasons.push('Your message appears to be spam or promotional content')
+      reasons.push(ModerationMessage.Spam)
       return { isSpam: true, reasons }
     }
   }
@@ -85,7 +87,7 @@ function checkBlocklist(text: string, customBlocklist?: string[]): { isBlocked: 
   
   for (const phrase of allBlocklist) {
     if (lowerText.includes(phrase.toLowerCase())) {
-      reasons.push('Your message contains prohibited content')
+      reasons.push(ModerationMessage.Prohibited)
       return { isBlocked: true, reasons }
     }
   }
@@ -110,7 +112,7 @@ export function moderateContent(
       isSafe: false,
       categories: [],
       score: 0,
-      reasons: ['Please enter a message'],
+      reasons: [ModerationMessage.PleaseEnterMessage],
     }
   }
 

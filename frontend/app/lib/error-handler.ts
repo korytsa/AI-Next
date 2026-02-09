@@ -1,3 +1,5 @@
+import { ErrorType, ErrorMessage } from './app-strings'
+
 export interface ChatError {
   message: string
   type: 'rate_limit' | 'network' | 'server' | 'validation_error' | 'moderation_error' | 'unknown'
@@ -7,10 +9,13 @@ export interface ChatError {
 }
 
 export function parseError(error: any, response?: Response): ChatError {
-  const isContentError = error && typeof error === 'object' && (error.type === 'validation_error' || error.type === 'moderation_error')
+  const isContentError =
+    error &&
+    typeof error === 'object' &&
+    (error.type === ErrorType.ValidationError || error.type === ErrorType.ModerationError)
   if (isContentError) {
     return {
-      message: error.error || error.message || 'Your request contains content that violates our usage policy',
+      message: error.error || error.message || ErrorMessage.ValidationPolicy,
       type: error.type,
       retryable: false,
       details: error.details || [],
@@ -20,8 +25,8 @@ export function parseError(error: any, response?: Response): ChatError {
   if (response?.status === 429) {
     const retryAfter = response.headers.get('retry-after') || response.headers.get('Retry-After')
     return {
-      message: 'Too many requests. Please wait a moment and try again.',
-      type: 'rate_limit',
+      message: ErrorMessage.RateLimit,
+      type: ErrorType.RateLimit,
       retryable: true,
       retryAfter: retryAfter ? parseInt(retryAfter, 10) : undefined,
     }
@@ -29,39 +34,43 @@ export function parseError(error: any, response?: Response): ChatError {
 
   if (!response || error instanceof TypeError || error.message?.includes('fetch')) {
     return {
-      message: 'Network error. Please check your internet connection and try again.',
-      type: 'network',
+      message: ErrorMessage.Network,
+      type: ErrorType.Network,
       retryable: true,
     }
   }
 
   if (response.status >= 500) {
     return {
-      message: 'Server error. Please try again in a moment.',
-      type: 'server',
+      message: ErrorMessage.Server,
+      type: ErrorType.Server,
       retryable: true,
     }
   }
 
   if (response.status >= 400) {
-    const isValidationError = error.type === 'validation_error' || error.type === 'moderation_error'
+    const isValidationError =
+      error.type === ErrorType.ValidationError || error.type === ErrorType.ModerationError
     return {
-      message: error.error || error.message || (isValidationError ? 'Your request contains invalid content' : 'Invalid request. Please check your input.'),
-      type: isValidationError ? error.type : 'server',
+      message:
+        error.error ||
+        error.message ||
+        (isValidationError ? ErrorMessage.ValidationInvalidContent : ErrorMessage.InvalidRequest),
+      type: isValidationError ? error.type : ErrorType.Server,
       retryable: false,
       details: error.details || [],
     }
   }
 
   return {
-    message: error.message || 'An unexpected error occurred. Please try again.',
-    type: 'unknown',
+    message: error.message || ErrorMessage.Unexpected,
+    type: ErrorType.Unknown,
     retryable: true,
   }
 }
 
 export function getErrorMessage(error: ChatError): string {
-  return error.type === 'rate_limit' && error.retryAfter
+  return error.type === ErrorType.RateLimit && error.retryAfter
     ? `${error.message} (Retry after ${error.retryAfter} seconds)`
     : error.message
 }

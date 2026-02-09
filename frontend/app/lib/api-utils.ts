@@ -1,3 +1,5 @@
+import { ErrorMessage } from './app-strings'
+
 export function getErrorStatus(error: any): number {
   if (error?.status === 429) return 429
   if (error?.status === 401) return 401
@@ -13,19 +15,21 @@ export function getRetryAfter(error: any): number | undefined {
   return undefined
 }
 
-export function getErrorMessage(error: any, defaultMessage: string = 'Failed to get AI response'): string {
+export function getErrorMessage(error: any, defaultMessage: string = ErrorMessage.FailedToGetResponse): string {
   const status = getErrorStatus(error)
-  
+
   if (status === 429) {
-    return 'Rate limit exceeded. Please wait a moment and try again.'
-  } else if (status === 401) {
-    return 'Invalid API key. Please check your configuration.'
-  } else if (error?.message) {
+    return ErrorMessage.RateLimit
+  }
+  if (status === 401) {
+    return ErrorMessage.InvalidApiKey
+  }
+  if (error?.message) {
     if (error.message.includes('GROQ_API_KEY') || error.message.includes('API key')) {
-      return 'API key is missing or invalid. Please check your environment variables.'
+      return ErrorMessage.ApiKeyMissingOrInvalid
     }
     return error.message
   }
-  
+
   return defaultMessage
 }

@@ -1,21 +1,19 @@
 import OpenAI from 'openai'
-import { getApiKeyFromEnv, maskApiKey } from './api-key-security'
+import { getApiKeyFromEnv } from './api-key-security'
 import { DEFAULT_MODEL_ID } from './models'
+import { ErrorMessage, ApiString } from './app-strings'
 
 let groqApiKey: string | null = null
 
 try {
   groqApiKey = getApiKeyFromEnv()
 } catch (error: any) {
-  const errorMessage = error?.message || 'Unknown error'
-  throw new Error(`Failed to load API key: ${errorMessage}. Please check your frontend/.env.local file.`)
+  const errorMessage = error?.message || ErrorMessage.Unknown
+  throw new Error(ApiString.FailedToLoadApiKey(errorMessage))
 }
 
 if (!groqApiKey) {
-  throw new Error(
-    'GROQ_API_KEY is not set in environment variables. ' +
-    'Please create frontend/.env.local file with: GROQ_API_KEY=your_api_key_here'
-  )
+  throw new Error(ApiString.GroqKeyNotSet)
 }
 
 export const openai = new OpenAI({
