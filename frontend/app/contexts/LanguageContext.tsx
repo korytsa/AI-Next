@@ -1,8 +1,10 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { Language, translations } from '@/app/lib/translations'
 import { getFromStorage, saveToStorage } from '@/app/lib/storage'
+import i18n from '@/app/lib/i18n'
+
+export type Language = 'en' | 'ru'
 
 interface LanguageContextType {
   language: Language
@@ -18,29 +20,30 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const isValidLanguage = (value: string): value is Language => value === 'en' || value === 'ru'
     const saved = getFromStorage('language', 'en' as Language, isValidLanguage)
-    
+
+    let resolved: Language
     if (saved === 'en' || saved === 'ru') {
-      setLanguageState(saved)
+      resolved = saved
     } else {
       const browserLang = navigator.language.split('-')[0]
-      setLanguageState(browserLang === 'ru' ? 'ru' : 'en')
+      resolved = browserLang === 'ru' ? 'ru' : 'en'
     }
+
+    setLanguageState(resolved)
+    i18n.changeLanguage(resolved).catch(() => {
+    })
   }, [])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
+    i18n.changeLanguage(lang).catch(() => {
+    })
     saveToStorage('language', lang)
   }
 
   const t = (key: string): string => {
-    const keys = key.split('.')
-    let value: any = translations[language]
-    
-    for (const k of keys) {
-      value = value?.[k]
-    }
-    
-    return typeof value === 'string' ? value : key
+    const value = i18n.t(key)
+    return typeof value === 'string' && value.length > 0 ? value : key
   }
 
   return (
@@ -57,3 +60,4 @@ export function useLanguage() {
   }
   return context
 }
+
