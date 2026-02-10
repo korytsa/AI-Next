@@ -1,5 +1,5 @@
 import { Message } from '../types'
-import { ChatError, parseError } from '@/app/lib/error-handler'
+import { ChatError, parseError } from '@/app/lib/errors'
 import { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
 
 export function isChatError(error: any): error is ChatError {

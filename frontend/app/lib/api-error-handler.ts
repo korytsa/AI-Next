@@ -1,7 +1,7 @@
 import { getErrorStatus, getRetryAfter, getErrorMessage } from './api-utils'
-import { ErrorType } from './app-strings'
+import { ErrorType, type ErrorTypeValue } from './app-strings'
 import { recordMetric } from './metrics'
-import { trackError } from './error-tracker'
+import { trackError } from './errors'
 
 interface RecordErrorParams {
   error: any
@@ -11,6 +11,13 @@ interface RecordErrorParams {
   responseTokens: number
   startTime: number
   endpointType: 'chat' | 'stream'
+}
+
+interface ErrorResponseData {
+  error: string
+  type: ErrorTypeValue
+  retryAfter?: number
+  details?: string
 }
 
 export function recordApiError(params: RecordErrorParams) {
@@ -32,18 +39,22 @@ export function recordApiError(params: RecordErrorParams) {
   return status
 }
 
-export function createErrorResponseData(error: any, status: number, defaultMessage?: string) {
+export function createErrorResponseData(
+  error: any,
+  status: number,
+  defaultMessage?: string
+): { errorData: ErrorResponseData; retryAfter?: number } {
   const retryAfter = getRetryAfter(error)
   const errorMessage = getErrorMessage(error, defaultMessage)
   
-  const errorData: any = {
+  const errorData: ErrorResponseData = {
     error: errorMessage,
     type: status === 429 ? ErrorType.RateLimit : ErrorType.Server,
   }
   
   if (retryAfter) errorData.retryAfter = retryAfter
   if (process.env.NODE_ENV === 'development') {
-    errorData.details = error?.message
+    errorData.details = String(error?.message ?? '')
   }
   
   return { errorData, retryAfter }

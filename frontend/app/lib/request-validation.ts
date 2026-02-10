@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { validateMessages as validatePromptMessages } from './prompt-validator'
 import { moderateMessages } from './content-moderation'
 import { sanitizeMessages } from './sanitization'
-import { trackError } from './error-tracker'
+import { trackError, ErrorMessage, ErrorType } from './errors'
 
 interface ValidationResult {
   isValid: boolean
@@ -27,24 +27,24 @@ export async function validateAndModerateRequest(
 
   if (!promptValidation.isValid) {
     const uniqueErrors = [...new Set(promptValidation.errors)]
-    const validationError = new Error(
-      uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy'
-    )
+    const baseMessage =
+      uniqueErrors.length === 1 ? uniqueErrors[0] : ErrorMessage.ValidationPolicy
+    const validationError = new Error(baseMessage)
     validationError.name = 'ValidationError'
 
     trackError(validationError, {
       endpoint,
       method: 'POST',
       statusCode: 400,
-      type: 'validation_error',
+      type: ErrorType.ValidationError,
       model: selectedModel,
       details: uniqueErrors,
     })
 
     const errorResponse = {
-      error: uniqueErrors.length === 1 ? uniqueErrors[0] : 'Your request contains content that violates our usage policy',
+      error: baseMessage,
       details: uniqueErrors,
-      type: 'validation_error',
+      type: ErrorType.ValidationError,
     }
 
     if (isStreaming) {
@@ -73,25 +73,24 @@ export async function validateAndModerateRequest(
   if (!moderation.isSafe) {
     const allReasons = moderation.results.flatMap((r) => r.reasons)
     const uniqueReasons = [...new Set(allReasons)]
-
-    const moderationError = new Error(
-      uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy'
-    )
+    const baseMessage =
+      uniqueReasons.length === 1 ? uniqueReasons[0] : ErrorMessage.ValidationPolicy
+    const moderationError = new Error(baseMessage)
     moderationError.name = 'ModerationError'
 
     trackError(moderationError, {
       endpoint,
       method: 'POST',
       statusCode: 400,
-      type: 'moderation_error',
+      type: ErrorType.ModerationError,
       model: selectedModel,
       reasons: uniqueReasons,
     })
 
     const errorResponse = {
-      error: uniqueReasons.length === 1 ? uniqueReasons[0] : 'Your request contains content that violates our usage policy',
+      error: baseMessage,
       details: uniqueReasons,
-      type: 'moderation_error',
+      type: ErrorType.ModerationError,
     }
 
     if (isStreaming) {

@@ -1,11 +1,15 @@
-import { ErrorType, ErrorMessage } from './app-strings'
+import { ErrorType, ErrorMessage, type ErrorTypeValue } from './app-strings'
 
 export interface ChatError {
   message: string
-  type: 'rate_limit' | 'network' | 'server' | 'validation_error' | 'moderation_error' | 'unknown'
+  type: ErrorTypeValue
   retryable: boolean
   retryAfter?: number
   details?: string[]
+}
+
+function getBaseMessage(error: any, fallback: string): string {
+  return error?.error || error?.message || fallback
 }
 
 export function parseError(error: any, response?: Response): ChatError {
@@ -15,7 +19,7 @@ export function parseError(error: any, response?: Response): ChatError {
     (error.type === ErrorType.ValidationError || error.type === ErrorType.ModerationError)
   if (isContentError) {
     return {
-      message: error.error || error.message || ErrorMessage.ValidationPolicy,
+      message: getBaseMessage(error, ErrorMessage.ValidationPolicy),
       type: error.type,
       retryable: false,
       details: error.details || [],
@@ -51,11 +55,12 @@ export function parseError(error: any, response?: Response): ChatError {
   if (response.status >= 400) {
     const isValidationError =
       error.type === ErrorType.ValidationError || error.type === ErrorType.ModerationError
+    const fallback = isValidationError
+      ? ErrorMessage.ValidationInvalidContent
+      : ErrorMessage.InvalidRequest
+
     return {
-      message:
-        error.error ||
-        error.message ||
-        (isValidationError ? ErrorMessage.ValidationInvalidContent : ErrorMessage.InvalidRequest),
+      message: getBaseMessage(error, fallback),
       type: isValidationError ? error.type : ErrorType.Server,
       retryable: false,
       details: error.details || [],
@@ -63,7 +68,7 @@ export function parseError(error: any, response?: Response): ChatError {
   }
 
   return {
-    message: error.message || ErrorMessage.Unexpected,
+    message: getBaseMessage(error, ErrorMessage.Unexpected),
     type: ErrorType.Unknown,
     retryable: true,
   }

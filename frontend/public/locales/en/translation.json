@@ -118,6 +118,7 @@
     "title": "Error Tracking",
     "loading": "Loading errors...",
     "refresh": "Refresh",
+    "refreshing": "Refreshing…",
     "clear": "Clear",
     "clearConfirm": "Are you sure you want to clear all errors? This action cannot be undone.",
     "totalErrors": "Total Errors",

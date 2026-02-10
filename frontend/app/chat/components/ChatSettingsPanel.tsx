@@ -1,4 +1,4 @@
-import { Download, BarChart3, AlertTriangle, FileText, FileCode, FileJson, FileType } from 'lucide-react'
+import { Download, BarChart3, FileText, FileCode, FileJson, FileType } from 'lucide-react'
 import { Button } from '@/app/components/Button'
 import { Select } from '@/app/components/Select'
 import { Switch } from '@/app/components/Switch'
@@ -194,14 +194,6 @@ export function ChatSettingsPanel({
         >
           <BarChart3 className="w-4 h-4" />
           {t('settings.metrics')}
-        </Link>
-        <Link
-          href="/errors"
-          className="px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50/80 dark:hover:bg-red-900/30 rounded-2xl transition-all duration-200 flex items-center gap-2 shadow-soft hover:shadow-soft-lg"
-          title={t('settings.errors')}
-        >
-          <AlertTriangle className="w-4 h-4" />
-          {t('settings.errors')}
         </Link>
         {onSelectTemplate && (
           <PromptTemplates

@@ -1,6 +1,6 @@
 'use client'
 
-import { Trash2 } from 'lucide-react'
+import { Trash2, RefreshCw } from 'lucide-react'
 import { useLanguage } from '@/app/contexts/LanguageContext'
 import { useFetch, useFetchMutation } from '@/app/hooks/useFetch'
 import { Button } from '@/app/components/Button'
@@ -18,9 +18,7 @@ const EMPTY_ERROR_DATA = {
 
 export function ErrorsTab() {
   const { t } = useLanguage()
-  const { data: errorData, loading, setData: setErrorData } = useFetch<any>('/api/errors', {
-    refetchInterval: 5000,
-  })
+  const { data: errorData, loading, setData: setErrorData, refetch } = useFetch<any>('/api/errors')
   const { execute: executeClear } = useFetchMutation()
 
   const handleClear = async () => {
@@ -37,8 +35,18 @@ export function ErrorsTab() {
 
   if (!errorData || errorData.total === 0) {
     return (
-      <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-        {t('errorsPage.noErrors')}
+      <div className="flex flex-col items-center justify-center gap-4 py-12 text-slate-500 dark:text-slate-400">
+        <div>{t('errorsPage.noErrors')}</div>
+        <Button
+          variant="blue"
+          size="md"
+          onClick={refetch}
+          disabled={loading}
+          className="rounded-xl"
+        >
+          <RefreshCw className="w-4 h-4" />
+          {t('errorsPage.refresh')}
+        </Button>
       </div>
     )
   }
@@ -66,10 +74,16 @@ export function ErrorsTab() {
             rounded="xl"
           />
         </div>
-        <Button variant="danger" size="md" onClick={handleClear} className="rounded-xl">
-          <Trash2 className="w-4 h-4" />
-          {t('errorsPage.clear')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="blue" size="md" onClick={refetch} disabled={loading} className="rounded-xl">
+            <RefreshCw className="w-4 h-4" />
+            {t('errorsPage.refresh')}
+          </Button>
+          <Button variant="danger" size="md" onClick={handleClear} className="rounded-xl">
+            <Trash2 className="w-4 h-4" />
+            {t('errorsPage.clear')}
+          </Button>
+        </div>
       </div>
 
       {errorData.errors && errorData.errors.length > 0 && (

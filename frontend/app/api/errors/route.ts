@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { errorStore } from '@/app/lib/error-tracker'
+import { errorStore } from '@/app/lib/errors'
 
 export async function GET(req: NextRequest) {
   try {

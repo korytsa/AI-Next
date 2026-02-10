@@ -1,4 +1,4 @@
-import { ChatError } from '@/app/lib/error-handler'
+import { ChatError } from '@/app/lib/errors'
 
 export interface Message {
   role: 'user' | 'assistant' | 'system'

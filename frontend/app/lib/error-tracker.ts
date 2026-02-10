@@ -1,4 +1,4 @@
-interface ErrorEntry {
+export interface ErrorEntry {
   id: string
   timestamp: number
   message: string
@@ -19,8 +19,6 @@ declare global {
 class ErrorStore {
   private errors: ErrorEntry[] = []
   private readonly maxErrors = 1000
-
-  constructor() {}
 
   record(error: Omit<ErrorEntry, 'id' | 'timestamp'>) {
     const fullEntry: ErrorEntry = {
@@ -97,7 +95,18 @@ export function trackError(
 ) {
   const message = error?.message || String(error) || 'Unknown error'
   const stack = error?.stack
-  const type = error?.name || error?.type || 'unknown'
+  const explicitType = typeof context?.type === 'string' ? String(context.type) : undefined
+  const type = explicitType || error?.name || error?.type || 'unknown'
+
+  const contextFields =
+    context && Object.keys(context).length > 0
+      ? Object.fromEntries(
+          Object.entries(context).filter(
+            ([key]) =>
+              !['endpoint', 'method', 'statusCode', 'userAgent', 'url'].includes(key)
+          )
+        )
+      : undefined
 
   errorStore.record({
     message,
@@ -108,6 +117,6 @@ export function trackError(
     statusCode: context?.statusCode,
     userAgent: context?.userAgent,
     url: context?.url,
-    context: context ? Object.fromEntries(Object.entries(context).filter(([k]) => !['endpoint', 'method', 'statusCode', 'userAgent', 'url'].includes(k))) : undefined,
+    context: contextFields,
   })
 }
