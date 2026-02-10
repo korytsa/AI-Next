@@ -98,11 +98,11 @@ export async function handleStreamingSubmit(
                 setLoading(false)
                 return
               }
-              
+
               if (parsed.usage) {
                 setTotalTokens((prev) => prev + (parsed.usage.total_tokens || 0))
               }
-              
+
               if (parsed.content) {
                 streamingContentRef.current += parsed.content
                 updateLastMessage((prev) => ({

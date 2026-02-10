@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       endpointType: 'stream',
     })
     console.error('Error in streaming chat API:', sanitizeErrorForLogging(error))
-    
+
     const { errorData, retryAfter } = createErrorResponseData(error, status, 'Failed to stream AI response')
     return new Response(JSON.stringify(errorData), {
       status,
