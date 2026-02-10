@@ -23,7 +23,7 @@ export type InputVariant = keyof typeof variantStyles
 export type InputSize = keyof typeof sizeStyles
 
 export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'className' | 'size'> {
   variant?: InputVariant
   size?: InputSize
   className?: string
