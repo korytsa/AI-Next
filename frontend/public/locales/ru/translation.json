@@ -18,6 +18,7 @@
     "signUpPrompt": "Зарегистрируйтесь, чтобы начать",
     "noAccount": "Нет аккаунта?",
     "haveAccount": "Уже есть аккаунт?",
+    "signInWithGoogle": "Войти через Google",
     "errors": {
       "emailPasswordRequired": "Email и пароль обязательны",
       "userExists": "Пользователь с таким email уже существует",
@@ -25,7 +26,10 @@
       "invalidRequest": "Некорректные данные запроса",
       "registrationFailed": "Ошибка регистрации",
       "loginFailed": "Ошибка входа",
-      "somethingWentWrong": "Что-то пошло не так"
+      "somethingWentWrong": "Что-то пошло не так",
+      "googleDenied": "Вход через Google отменён",
+      "oauthFailed": "Ошибка входа через Google. Попробуйте ещё раз.",
+      "noEmail": "Google не предоставил email"
     }
   },
   "chat": {

@@ -18,6 +18,7 @@ interface ChatHeaderProps {
   loading: boolean
   onClearHistory: () => void
   userName?: string | null
+  onEditName?: (name: string) => void
   responseMode: ResponseMode
   onSetResponseMode: (mode: ResponseMode) => void
   onExportDialog?: (format: 'txt' | 'markdown' | 'json' | 'pdf') => void
@@ -39,7 +40,7 @@ interface ChatHeaderProps {
   onSetSearchQuery?: (query: string) => void
 }
 
-export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, autoPlayVoice, onToggleAutoPlayVoice, useRAG, onToggleUseRAG, useCache, onToggleUseCache, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
+export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHistory, userName, onEditName, responseMode, onSetResponseMode, onExportDialog, totalTokens, chainOfThought, onSetChainOfThought, selectedModel, onSetSelectedModel, autoPlayVoice, onToggleAutoPlayVoice, useRAG, onToggleUseRAG, useCache, onToggleUseCache, isExporting = false, currentInput = '', onSelectTemplate, searchQuery = '', onSetSearchQuery }: ChatHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const [userNickname, setUserNickname] = useState<string>('')
@@ -64,6 +65,22 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
   const displayName =
     isLoggedIn && userNickname ? userNickname : (userName ?? 'user')
 
+  const handleEditName = async (name: string) => {
+    if (isLoggedIn) {
+      const res = await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: name }),
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setUserNickname(name)
+      }
+    } else if (onEditName) {
+      onEditName(name)
+    }
+  }
+
   return (
     <>
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 shadow-soft">
@@ -71,7 +88,10 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
         <Flex align="center" gap={4}>
           <div className="pl-4" />
           <Heading as="h1" size="2xl" weight="bold" color="inherit">{t('chat.title')}</Heading>
-          <UserNameBadge userName={displayName} />
+          <UserNameBadge
+            userName={displayName}
+            onChangeName={handleEditName}
+          />
         </Flex>
         <Flex align="center" gap={4}>
         {totalTokens !== undefined && totalTokens > 0 && (

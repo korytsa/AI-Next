@@ -31,3 +31,19 @@ export function findUserByEmail(email: string): User | undefined {
 export function findUserById(id: string): User | undefined {
   return users.find((u) => u.id === id)
 }
+
+export function findOrCreateUserByEmail(
+  email: string,
+  nickname: string = ''
+): User {
+  const existing = findUserByEmail(email)
+  if (existing) return existing
+  return addUser(email, '', nickname)
+}
+
+export function updateUserNickname(userId: string, nickname: string): void {
+  const user = users.find((u) => u.id === userId)
+  if (user) {
+    user.nickname = nickname.trim()
+  }
+}

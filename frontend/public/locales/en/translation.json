@@ -18,6 +18,7 @@
     "signUpPrompt": "Sign up to get started",
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
+    "signInWithGoogle": "Sign in with Google",
     "errors": {
       "emailPasswordRequired": "Email and password are required",
       "userExists": "User with this email already exists",
@@ -25,7 +26,10 @@
       "invalidRequest": "Invalid request body",
       "registrationFailed": "Registration failed",
       "loginFailed": "Login failed",
-      "somethingWentWrong": "Something went wrong"
+      "somethingWentWrong": "Something went wrong",
+      "googleDenied": "Google sign-in was cancelled",
+      "oauthFailed": "Google sign-in failed. Please try again.",
+      "noEmail": "No email provided by Google"
     }
   },
   "chat": {
