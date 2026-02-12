@@ -207,7 +207,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <a href="/api/auth/google">
+            <a href="/api/auth/google" className="block mt-8">
               <Button
                 type="button"
                 variant="secondary"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
@@ -22,7 +22,7 @@ import { useLanguage } from '@/app/contexts/LanguageContext'
 //   return errors
 // }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLanguage()
@@ -160,7 +160,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <a href="/api/auth/google">
+            <a href="/api/auth/google" className="block mt-8">
               <Button
                 type="button"
                 variant="secondary"
@@ -202,5 +202,34 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+      <div className="w-full max-w-md">
+        <div className="rounded-3xl border border-slate-200/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-soft-xl p-8">
+          <div className="animate-pulse h-8 bg-slate-200 dark:bg-slate-600 rounded mb-2" />
+          <div className="animate-pulse h-4 bg-slate-200 dark:bg-slate-600 rounded w-2/3 mx-auto mb-8" />
+          <div className="space-y-5">
+            <div className="animate-pulse h-12 bg-slate-200 dark:bg-slate-600 rounded" />
+            <div className="animate-pulse h-12 bg-slate-200 dark:bg-slate-600 rounded" />
+            <div className="animate-pulse h-12 bg-slate-200 dark:bg-slate-600 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginForm />
+    </Suspense>
   )
 }
