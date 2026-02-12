@@ -38,7 +38,6 @@ const SPAM_PATTERNS = [
 
 function checkToxicity(text: string): { isToxic: boolean; reasons: string[] } {
   const reasons: string[] = []
-  const lowerText = text.toLowerCase()
   
   const profanityPatterns = [
     /\b(fuck|shit|damn|bitch|asshole|idiot|stupid|dumb)\b/i,

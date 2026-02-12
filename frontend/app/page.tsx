@@ -1,7 +1,5 @@
-import { RedirectToChat } from './RedirectToChat'
-
-export const revalidate = 3600
+import { redirect } from 'next/navigation'
 
 export default function Home() {
-  return <RedirectToChat />
+  redirect('/chat')
 }

@@ -1,4 +1,33 @@
 {
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signUp": "Sign up",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Your nickname",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "confirmPassword": "Confirm password",
+    "welcomeBack": "Welcome back",
+    "signInPrompt": "Sign in to continue",
+    "signingIn": "Signing in...",
+    "signingUp": "Signing up...",
+    "createAccount": "Create account",
+    "signUpPrompt": "Sign up to get started",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "errors": {
+      "emailPasswordRequired": "Email and password are required",
+      "userExists": "User with this email already exists",
+      "invalidCredentials": "Invalid email or password",
+      "invalidRequest": "Invalid request body",
+      "registrationFailed": "Registration failed",
+      "loginFailed": "Login failed",
+      "somethingWentWrong": "Something went wrong"
+    }
+  },
   "chat": {
     "title": "AI Chat",
     "placeholder": "Type your message...",

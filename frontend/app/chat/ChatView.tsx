@@ -19,7 +19,6 @@ export default function ChatView() {
     clearHistory,
     retryLastMessage,
     userName,
-    handleSetUserName,
     responseMode,
     handleSetResponseMode,
     exportDialog,
@@ -52,7 +51,6 @@ export default function ChatView() {
         loading={loading}
         onClearHistory={clearHistory}
         userName={userName}
-        onEditName={handleSetUserName}
         responseMode={responseMode}
         onSetResponseMode={handleSetResponseMode}
         onExportDialog={exportDialog}

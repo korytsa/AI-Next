@@ -50,12 +50,9 @@ export function createErrorResponseData(
   const errorData: ErrorResponseData = {
     error: errorMessage,
     type: status === 429 ? ErrorType.RateLimit : ErrorType.Server,
+    details: String(error?.message ?? ''),
   }
-  
   if (retryAfter) errorData.retryAfter = retryAfter
-  if (process.env.NODE_ENV === 'development') {
-    errorData.details = String(error?.message ?? '')
-  }
-  
+
   return { errorData, retryAfter }
 }

@@ -1,4 +1,33 @@
 {
+  "auth": {
+    "signIn": "Войти",
+    "signOut": "Выйти",
+    "signUp": "Регистрация",
+    "nickname": "Никнейм",
+    "nicknamePlaceholder": "Ваш никнейм",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Пароль",
+    "passwordPlaceholder": "••••••••",
+    "confirmPassword": "Подтвердите пароль",
+    "welcomeBack": "С возвращением",
+    "signInPrompt": "Войдите, чтобы продолжить",
+    "signingIn": "Вход...",
+    "signingUp": "Регистрация...",
+    "createAccount": "Создать аккаунт",
+    "signUpPrompt": "Зарегистрируйтесь, чтобы начать",
+    "noAccount": "Нет аккаунта?",
+    "haveAccount": "Уже есть аккаунт?",
+    "errors": {
+      "emailPasswordRequired": "Email и пароль обязательны",
+      "userExists": "Пользователь с таким email уже существует",
+      "invalidCredentials": "Неверный email или пароль",
+      "invalidRequest": "Некорректные данные запроса",
+      "registrationFailed": "Ошибка регистрации",
+      "loginFailed": "Ошибка входа",
+      "somethingWentWrong": "Что-то пошло не так"
+    }
+  },
   "chat": {
     "title": "AI Чат",
     "placeholder": "Введите сообщение...",
