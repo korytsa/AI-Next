@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLoading } from '@/app/hooks/useLoading'
 import { Message } from '../types'
 import { getJsonFromStorage, saveJsonToStorage, removeFromStorage } from '@/app/lib/storage'
 
@@ -16,7 +17,7 @@ export function useMessages() {
   const [allMessages, setAllMessages] = useState<Message[]>([DEFAULT_MESSAGE])
   const [displayedMessages, setDisplayedMessages] = useState<Message[]>([DEFAULT_MESSAGE])
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const { loading: isLoadingMore, setLoading: setIsLoadingMore, run: runLoadMore } = useLoading()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesStartRef = useRef<HTMLDivElement>(null)
   const isInitialLoad = useRef(true)
@@ -35,16 +36,14 @@ export function useMessages() {
   const loadMoreMessages = () => {
     if (isLoadingMore || !hasMoreMessages) return
 
-    setIsLoadingMore(true)
-    const currentStartIndex = allMessages.length - displayedMessages.length
-    const newStartIndex = Math.max(0, currentStartIndex - MESSAGES_PER_LOAD)
-    const messagesToAdd = allMessages.slice(newStartIndex, currentStartIndex)
-    
-    setTimeout(() => {
+    runLoadMore(async () => {
+      const currentStartIndex = allMessages.length - displayedMessages.length
+      const newStartIndex = Math.max(0, currentStartIndex - MESSAGES_PER_LOAD)
+      const messagesToAdd = allMessages.slice(newStartIndex, currentStartIndex)
+      await new Promise((r) => setTimeout(r, 100))
       setDisplayedMessages([...messagesToAdd, ...displayedMessages])
       setHasMoreMessages(newStartIndex > 0)
-      setIsLoadingMore(false)
-    }, 100)
+    })
   }
 
   const addMessage = (message: Message) => {

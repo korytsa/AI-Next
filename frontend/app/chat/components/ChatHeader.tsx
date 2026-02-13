@@ -125,6 +125,11 @@ export function ChatHeader({ useStreaming, onToggleStreaming, loading, onClearHi
             <Trash2 className="w-4 h-4" />
             {t('chat.clearHistory')}
           </Button>
+          <Link href="/pricing">
+            <Button variant="successGhost" size="md">
+              {t('common.upgrade')}
+            </Button>
+          </Link>
           {isLoggedIn !== null &&
             (isLoggedIn ? (
               <Button variant="ghost" size="md" onClick={handleSignOut}>

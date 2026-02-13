@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
   if (!email) return NextResponse.redirect(new URL('/login?error=no_email', req.url))
 
   const user = findOrCreateUserByEmail(email, payload?.name || payload?.given_name || '')
-  const res = NextResponse.redirect(new URL('/chat', req.url))
+  const state = req.nextUrl.searchParams.get('state') || '/chat'
+  const redirectTo = state.startsWith('/') ? state : '/chat'
+  const res = NextResponse.redirect(new URL(redirectTo, req.url))
   res.cookies.set(AUTH_COOKIE_NAME, signToken({ userId: user.id, email: user.email }), {
     path: '/',
     httpOnly: true,

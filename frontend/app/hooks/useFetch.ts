@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useLoading } from './useLoading'
 
 export interface UseFetchOptions extends RequestInit {
   refetchInterval?: number
@@ -32,21 +33,14 @@ export function useFetch<T = unknown>(
   requestInitRef.current = requestInit
 
   const [data, setData] = useState<T | null>(null)
-  const [loading, setLoading] = useState(enabled)
+  const { loading, setLoading, run } = useLoading(enabled)
   const [error, setError] = useState<Error | null>(null)
 
-  const refetch = useCallback(async () => {
-    setLoading(true)
+  const refetch = useCallback(() => run(async () => {
     setError(null)
-    try {
-      const result = await fetchJson<T>(url, requestInitRef.current)
-      setData(result)
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)))
-    } finally {
-      setLoading(false)
-    }
-  }, [url])
+    const result = await fetchJson<T>(url, requestInitRef.current)
+    setData(result)
+  }).catch((e) => setError(e instanceof Error ? e : new Error(String(e)))), [url, run])
 
   useEffect(() => {
     if (!enabled) {
@@ -54,7 +48,7 @@ export function useFetch<T = unknown>(
       return
     }
     refetch()
-  }, [url, enabled, refetch])
+  }, [url, enabled, refetch, setLoading])
 
   useEffect(() => {
     if (!enabled || refetchInterval == null || refetchInterval <= 0) return
@@ -73,22 +67,17 @@ export interface UseFetchMutationResult {
 }
 
 export function useFetchMutation(): UseFetchMutationResult {
-  const [loading, setLoading] = useState(false)
+  const { loading, run } = useLoading()
   const [error, setError] = useState<Error | null>(null)
 
-  const execute = useCallback(async (url: string, init?: RequestInit): Promise<Response | null> => {
-    setLoading(true)
+  const execute = useCallback((url: string, init?: RequestInit): Promise<Response | null> => run(async () => {
     setError(null)
-    try {
-      const response = await fetch(url, init)
-      return response
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)))
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    const response = await fetch(url, init)
+    return response
+  }).catch((e) => {
+    setError(e instanceof Error ? e : new Error(String(e)))
+    return null
+  }), [run])
 
   const resetError = useCallback(() => setError(null), [])
 

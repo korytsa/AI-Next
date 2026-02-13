@@ -202,7 +202,7 @@ export default function RegisterPage() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">
-                  or
+                  {t('auth.or')}
                 </span>
               </div>
             </div>

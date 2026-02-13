@@ -19,6 +19,7 @@
     "noAccount": "Нет аккаунта?",
     "haveAccount": "Уже есть аккаунт?",
     "signInWithGoogle": "Войти через Google",
+    "or": "или",
     "errors": {
       "emailPasswordRequired": "Email и пароль обязательны",
       "userExists": "Пользователь с таким email уже существует",
@@ -146,6 +147,51 @@
     "avgLatency": "Ср. задержка",
     "tokensPerSec": "Токенов/сек",
     "noData": "Нет данных"
+  },
+  "pricing": {
+    "title": "Выберите тариф",
+    "subtitle": "Войдите, чтобы оформить подписку. Для Free не нужна карта.",
+    "free": "Бесплатный",
+    "pro": "Pro",
+    "forever": "навсегда",
+    "oneTime": "разово",
+    "currentPlan": "Текущий тариф",
+    "getPro": "Оформить Pro",
+    "backToChat": "← К чату",
+    "features": {
+      "free1": "5 сообщений в день",
+      "free2": "Базовые модели",
+      "free3": "Экспорт чата",
+      "pro1": "Безлимит сообщений",
+      "pro2": "Все AI-модели",
+      "pro3": "Приоритетная поддержка",
+      "pro4": "Голосовой ввод и вывод",
+      "pro5": "RAG-поиск"
+    }
+  },
+  "checkout": {
+    "title": "Оформление заказа",
+    "description": "Перейдите в Stripe Checkout для завершения оплаты ($9.99).",
+    "payWithStripe": "Оплатить через Stripe",
+    "redirecting": "Перенаправление...",
+    "backToChat": "← К чату",
+    "loading": "Загрузка...",
+    "paymentSetupFailed": "Ошибка настройки оплаты",
+    "noCheckoutUrl": "Не получен URL оплаты",
+    "networkError": "Ошибка сети. Попробуйте снова."
+  },
+  "payment": {
+    "successTitle": "Оплата прошла успешно",
+    "successMessage": "Спасибо за покупку.",
+    "successConfirmed": "Заказ подтверждён.",
+    "continue": "Продолжить",
+    "cancelledTitle": "Оплата отменена",
+    "cancelledMessage": "Оплата отменена. Списание не производилось.",
+    "tryAgain": "Попробовать снова",
+    "backToHome": "На главную"
+  },
+  "common": {
+    "upgrade": "Улучшить"
   },
   "errorsPage": {
     "title": "Отслеживание ошибок",

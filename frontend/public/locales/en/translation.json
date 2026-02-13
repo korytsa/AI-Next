@@ -19,6 +19,7 @@
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
     "signInWithGoogle": "Sign in with Google",
+    "or": "or",
     "errors": {
       "emailPasswordRequired": "Email and password are required",
       "userExists": "User with this email already exists",
@@ -146,6 +147,51 @@
     "avgLatency": "Avg Latency",
     "tokensPerSec": "Tokens/sec",
     "noData": "No data available"
+  },
+  "pricing": {
+    "title": "Choose your plan",
+    "subtitle": "Sign in to upgrade. No credit card required for Free.",
+    "free": "Free",
+    "pro": "Pro",
+    "forever": "forever",
+    "oneTime": "one-time",
+    "currentPlan": "Current plan",
+    "getPro": "Get Pro",
+    "backToChat": "← Back to Chat",
+    "features": {
+      "free1": "5 messages per day",
+      "free2": "Basic models",
+      "free3": "Chat export",
+      "pro1": "Unlimited messages",
+      "pro2": "All AI models",
+      "pro3": "Priority support",
+      "pro4": "Voice input/output",
+      "pro5": "RAG search"
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "description": "Proceed to Stripe Checkout to complete your payment ($9.99).",
+    "payWithStripe": "Pay with Stripe",
+    "redirecting": "Redirecting...",
+    "backToChat": "← Back to Chat",
+    "loading": "Loading...",
+    "paymentSetupFailed": "Payment setup failed",
+    "noCheckoutUrl": "No checkout URL received",
+    "networkError": "Network error. Please try again."
+  },
+  "payment": {
+    "successTitle": "Payment Successful",
+    "successMessage": "Thank you for your purchase.",
+    "successConfirmed": "Your order has been confirmed.",
+    "continue": "Continue",
+    "cancelledTitle": "Payment Cancelled",
+    "cancelledMessage": "Your payment was cancelled. No charges were made.",
+    "tryAgain": "Try Again",
+    "backToHome": "Back to Home"
+  },
+  "common": {
+    "upgrade": "Upgrade"
   },
   "errorsPage": {
     "title": "Error Tracking",

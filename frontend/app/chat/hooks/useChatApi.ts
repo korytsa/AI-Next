@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useLoading } from '@/app/hooks/useLoading'
 import { Message } from '../types'
 import { ResponseMode, ChainOfThoughtMode } from './useUserSettings'
 import { parseChatError, createErrorMessage } from './chatApiUtils'
@@ -32,7 +33,7 @@ export function useChatApi({
     useCache = false,
     scrollToBottom,
   }: UseChatApiProps) {
-  const [loading, setLoading] = useState(false)
+  const { loading, setLoading } = useLoading()
   const [totalTokens, setTotalTokens] = useState(0)
   const streamingContentRef = useRef<string>('')
   const abortControllerRef = useRef<AbortController | null>(null)
